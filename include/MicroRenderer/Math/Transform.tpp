@@ -2,7 +2,8 @@
 // Created by pusdo on 28/06/2024.
 //
 
-#include <MicroRenderer/Math/Transform.h>
+#pragma once
+#include "Transform.h"
 #include <cmath>
 
 namespace MicroRenderer {

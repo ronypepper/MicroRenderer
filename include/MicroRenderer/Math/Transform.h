@@ -34,3 +34,5 @@ public:
 };
 
 } // namespace MicroRenderer
+
+#include "Transform.tpp"

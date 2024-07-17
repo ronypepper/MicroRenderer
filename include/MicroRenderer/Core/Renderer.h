@@ -18,8 +18,10 @@ public:
     void rasterizeLineDDASafe(T x0, T x1, T y0, T y1, const Vector3<T> &color);
 
     void rasterizeLineDDAUnsafe(T x0, T x1, T y0, T y1, const Vector3<T> &color);
-private:
+
     Framebuffer<T, color_coding> framebuffer;
 };
 
 } // namespace MicroRenderer
+
+#include "Renderer.tpp"

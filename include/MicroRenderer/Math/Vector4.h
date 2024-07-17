@@ -31,6 +31,7 @@ public:
     };
 
     Vector4() {}
+
     explicit Vector4(T value) {
         x = value;
         y = value;

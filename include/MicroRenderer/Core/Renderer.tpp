@@ -2,7 +2,8 @@
 // Created by pusdo on 29/06/2024.
 //
 
-#include "MicroRenderer/Core/Renderer.h"
+#pragma once
+#include "Renderer.h"
 #include <algorithm>
 #include <cmath>
 
@@ -14,10 +15,10 @@ namespace MicroRenderer {
 
     template<typename T, ColorCoding color_coding>
     void Renderer<T, color_coding>::rasterizeLineDDASafe(T x0, T x1, T y0, T y1, const Vector3<T> &color) {
-        x0 = std::clamp(x0, 0, framebuffer.getWidth());
-        x1 = std::clamp(x1, 0, framebuffer.getWidth());
-        y0 = std::clamp(y0, 0, framebuffer.getHeight());
-        y1 = std::clamp(y1, 0, framebuffer.getHeight());
+        x0 = std::clamp(x0, static_cast<T>(0), static_cast<T>(framebuffer.getWidth()));
+        x1 = std::clamp(x1, static_cast<T>(0), static_cast<T>(framebuffer.getWidth()));
+        y0 = std::clamp(y0, static_cast<T>(0), static_cast<T>(framebuffer.getHeight()));
+        y1 = std::clamp(y1, static_cast<T>(0), static_cast<T>(framebuffer.getHeight()));
         rasterizeLineDDAUnsafe(x0, x1, y0, y1, color);
     }
 

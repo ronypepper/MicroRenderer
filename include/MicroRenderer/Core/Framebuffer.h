@@ -12,9 +12,12 @@ namespace MicroRenderer {
 #define RGB444_ALIGNMENT_ODD 1
 
 enum ColorCoding {
-    RGB888,
-    RGB565,
-    RGB444
+    RGB888 = 1u << 0,
+    RGB565 = 1u << 1,
+    RGB444 = 1u << 2,
+    BGR888 = 1u << 3,
+    BGR565 = 1u << 4,
+    BGR444 = 1u << 5
 };
 
 template<typename T, ColorCoding color_coding>
@@ -38,6 +41,10 @@ public:
     uint8* getAddress() const {
         return buffer;
     }
+
+    void clearBuffer();
+
+    void fillRect(uint32 x0, uint32 y0, uint32 x1, uint32 y1, const Vector3<T> &color);
 
     void drawPixel(uint32 x, const Vector3<T> &color);
 
@@ -80,3 +87,5 @@ private:
 };
 
 } // namespace MicroRenderer
+
+#include "Framebuffer.tpp"

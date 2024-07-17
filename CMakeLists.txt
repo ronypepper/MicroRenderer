@@ -9,12 +9,15 @@ add_library(MicroRenderer STATIC
         include/MicroRenderer/Math/Matrix4.h
         include/MicroRenderer/Math/ScalarTypes.h
         include/MicroRenderer/Math/Vector2.h
-        src/Math/Transform.cpp
+        include/MicroRenderer/Math/Transform.tpp
         include/MicroRenderer/Math/Transform.h
-        src/Core/Renderer.cpp
+        include/MicroRenderer/Core/Renderer.tpp
         include/MicroRenderer/Core/Renderer.h
-        src/Core/FrameBuffer.cpp
+        include/MicroRenderer/Core/Framebuffer.tpp
         include/MicroRenderer/Core/FrameBuffer.h
 )
 
 target_include_directories(MicroRenderer PUBLIC include)
+
+# The .tpp files seem to confuse cmake's language selection.
+set_target_properties(MicroRenderer PROPERTIES LINKER_LANGUAGE CXX)
