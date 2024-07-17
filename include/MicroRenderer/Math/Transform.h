@@ -33,4 +33,4 @@ public:
     static Matrix4<T> viewport(int32 viewport_width, int32 viewport_height);
 };
 
-} // MicroRenderer
+} // namespace MicroRenderer
