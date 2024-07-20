@@ -31,8 +31,7 @@ public:
     };
 
     Vector4() {}
-
-    explicit Vector4(T value) {
+    Vector4(T value) {
         x = value;
         y = value;
         z = value;
@@ -137,6 +136,11 @@ public:
     friend Vector4 operator-(Vector4 lhs, const T& rhs) {
         lhs -= rhs;
         return lhs;
+    }
+
+    // Negative operator.
+    Vector4 operator-() {
+        return {-x, -y, -z, -w};
     }
 
     // Multiplication operators.

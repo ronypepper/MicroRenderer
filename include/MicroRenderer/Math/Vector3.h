@@ -29,7 +29,7 @@ public:
     };
 
     Vector3() {}
-    explicit Vector3(T value) {
+    Vector3(T value) {
         x = value;
         y = value;
         z = value;
@@ -126,6 +126,11 @@ public:
     friend Vector3 operator-(Vector3 lhs, const T& rhs) {
         lhs -= rhs;
         return lhs;
+    }
+
+    // Negative operator.
+    Vector3 operator-() {
+        return {-x, -y, -z};
     }
 
     // Multiplication operators.

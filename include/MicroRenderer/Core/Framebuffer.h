@@ -46,19 +46,20 @@ public:
 
     void fillRect(uint32 x0, uint32 y0, uint32 x1, uint32 y1, const Vector3<T> &color);
 
-    void drawPixel(uint32 x, const Vector3<T> &color);
+    void setCursor(uint32 x);
 
-    void drawPixel(uint32 x, uint32 y, const Vector3<T> &color);
+    void setCursor(uint32 x, uint32 y);
 
-    void drawNextPixelInX(const Vector3<T> &color);
+    void moveCursorRight();
 
-    void drawNextPixelInY(const Vector3<T> &color);
+    void moveCursorLeft();
 
-    void drawNextPixelInXY(const Vector3<T> &color);
+    void moveCursorUp();
+
+    void moveCursorDown();
+
+    void drawPixelAtCursor(const Vector3<T> &color);
 private:
-
-    void drawPixelAtNumber(uint32 pixel_number, const Vector3<T> &color);
-
     void drawRGB888AtCursor(const Vector3<T> &color);
 
     void drawRGB565AtCursor(const Vector3<T> &color);
@@ -80,7 +81,7 @@ private:
     uint8* pixel_cursor = nullptr;
 
     // Helper variable to allow efficient x-incremental drawing to buffer in RGB444 mode.
-    uint8 rgb444_last_alignment = RGB444_ALIGNMENT_EVEN;
+    uint8 rgb444_alignment = RGB444_ALIGNMENT_EVEN;
 
     // Helper variable to allow efficient y-incremental drawing to buffer.
     uint32 next_line_cursor_increment = 0;

@@ -5,12 +5,13 @@
 #pragma once
 #include "Transform.h"
 #include <cmath>
+#include "Utility.h"
 
 namespace MicroRenderer {
 
 template<typename T>
 Matrix4<T> Transform::translation(const Vector3<T> &position) {
-    return {
+    return Matrix4<T>{
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
@@ -19,14 +20,14 @@ Matrix4<T> Transform::translation(const Vector3<T> &position) {
 }
 
 template<typename T>
-Matrix4<T> Transform::rotation(const Vector3<T> &rotation) {
-    T cos_x = std::cos(rotation.x);
-    T sin_x = std::sin(rotation.x);
-    T cos_y = std::cos(rotation.y);
-    T sin_y = std::sin(rotation.y);
-    T cos_z = std::cos(rotation.z);
-    T sin_z = std::sin(rotation.z);
-    return {
+Matrix4<T> Transform::rotationRadians(const Vector3<T> &rotation) {
+    const T cos_x = std::cos(rotation.x);
+    const T sin_x = std::sin(rotation.x);
+    const T cos_y = std::cos(rotation.y);
+    const T sin_y = std::sin(rotation.y);
+    const T cos_z = std::cos(rotation.z);
+    const T sin_z = std::sin(rotation.z);
+    return Matrix4<T>{
         cos_y * cos_z, cos_y * sin_z, -sin_y, 0,
         sin_x * sin_y * cos_z - cos_x * sin_z, sin_x * sin_y * sin_z + cos_x * cos_z, sin_x * cos_y, 0,
         cos_x * sin_y * cos_z + sin_x * sin_z, cos_x * sin_y * sin_z - sin_x * cos_z, cos_x * cos_y, 0,
@@ -35,8 +36,13 @@ Matrix4<T> Transform::rotation(const Vector3<T> &rotation) {
 }
 
 template<typename T>
+Matrix4<T> Transform::rotationEuler(const Vector3<T> &rotation) {
+    return rotationRadians(degreeToRadians(rotation));
+}
+
+template<typename T>
 Matrix4<T> Transform::scale(const Vector3<T> &scale) {
-    return {
+    return Matrix4<T>{
         scale.x, 0, 0, 0,
         0, scale.y, 0, 0,
         0, 0, scale.z, 0,
@@ -49,7 +55,7 @@ Matrix4<T> Transform::camera(const Vector3<T> &eye, const Vector3<T> &view_direc
     const Vector3<T> w = -view_direction.getNormalized();
     const Vector3<T> u = view_up.cross(w).getNormalized();
     const Vector3<T> v = w.cross(u);
-    return {
+    return Matrix4<T>{
         u.x, v.x, w.x, 0,
         u.y, v.y, w.y, 0,
         u.z, v.z, w.z, 0,
@@ -59,18 +65,18 @@ Matrix4<T> Transform::camera(const Vector3<T> &eye, const Vector3<T> &view_direc
 
 template<typename T>
 Matrix4<T> Transform::orthogonalProjection(T left, T right, T bottom, T top, T near, T far) {
-    return {
+    return Matrix4<T>{
         2 / (right - left), 0, 0, 0,
         0, 2 / (top - bottom), 0, 0,
         0, 0, 2 / (far - near), 0,
-        (right + left) / (left - right), (top + bottom) / (bottom - top), (far + near) / (near - far), 1
+        (right + left) / (left - right), (top + bottom) / (bottom - top), (far + near) / (far - near), 1
     };
 }
 
 template<typename T>
 Matrix4<T> Transform::perspectiveProjection(T vertical_fov, T aspect_ratio, T near, T far) {
-    T c = 1 / std::tan(vertical_fov / 2);
-    return {
+    const T c = 1 / std::tan(vertical_fov / 2);
+    return Matrix4<T>{
         c / aspect_ratio, 0, 0, 0,
         0, c, 0, 0,
         0, 0, (far + near) / (near - far), -1,
@@ -79,12 +85,16 @@ Matrix4<T> Transform::perspectiveProjection(T vertical_fov, T aspect_ratio, T ne
 }
 
 template<typename T>
-Matrix4<T> Transform::viewport(int32 viewport_width, int32 viewport_height) {
-    return {
-        viewport_width / 2, 0, 0, 0,
-        0, viewport_height / 2, 0, 0,
+Matrix4<T> Transform::viewport(uint32 viewport_width, uint32 viewport_height, bool mirror_x, bool mirror_y) {
+    const T cast_width = static_cast<T>(viewport_width);
+    const T cast_height = static_cast<T>(viewport_height);
+    const T factor_x = mirror_x ? static_cast<T>(-0.5) : static_cast<T>(0.5);
+    const T factor_y = mirror_y ? static_cast<T>(-0.5) : static_cast<T>(0.5);
+    return Matrix4<T>{
+        cast_width * factor_x, 0, 0, 0,
+        0, cast_height * factor_y, 0, 0,
         0, 0, 1, 0,
-        (viewport_width - 1) / 2, (viewport_height - 1) / 2, 0, 1
+        (cast_width - 1) * static_cast<T>(0.5), (cast_height - 1) * static_cast<T>(0.5), 0, 1
     };
 }
 

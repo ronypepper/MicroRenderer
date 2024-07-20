@@ -32,7 +32,7 @@ public:
     };
 
     Vector2() {}
-    explicit Vector2(T value) {
+    Vector2(T value) {
         x = value;
         y = value;
     }
@@ -121,6 +121,11 @@ public:
     friend Vector2 operator-(Vector2 lhs, const T& rhs) {
         lhs -= rhs;
         return lhs;
+    }
+
+    // Negative operator.
+    Vector2 operator-() {
+        return {-x, -y};
     }
 
     // Multiplication operators.

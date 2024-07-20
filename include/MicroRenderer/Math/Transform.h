@@ -15,7 +15,10 @@ public:
 
     // Rotation around x, than y, than z: R(x,y,z) = R_z(z) * R_y(y) * R_x(x)
     template<typename T>
-    static Matrix4<T> rotation(const Vector3<T>& rotation);
+    static Matrix4<T> rotationRadians(const Vector3<T>& rotation);
+
+    template<typename T>
+    static Matrix4<T> rotationEuler(const Vector3<T>& rotation);
 
     template<typename T>
     static Matrix4<T> scale(const Vector3<T>& scale);
@@ -30,7 +33,7 @@ public:
     static Matrix4<T> perspectiveProjection(T vertical_fov, T aspect_ratio, T near, T far);
 
     template<typename T>
-    static Matrix4<T> viewport(int32 viewport_width, int32 viewport_height);
+    static Matrix4<T> viewport(uint32 viewport_width, uint32 viewport_height, bool mirror_x = false, bool mirror_y = true);
 };
 
 } // namespace MicroRenderer

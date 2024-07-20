@@ -16,6 +16,7 @@ add_executable(MicroRenderer test/main.cpp
         include/MicroRenderer/Core/Renderer.h
         include/MicroRenderer/Core/FrameBuffer.h
         include/MicroRenderer/Core/Framebuffer.tpp
+        include/MicroRenderer/Math/Utility.h
 )
 
 target_include_directories(MicroRenderer PUBLIC include)

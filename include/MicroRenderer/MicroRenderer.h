@@ -12,6 +12,7 @@
 #include "MicroRenderer/Math/Matrix4.h"
 #include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Math/Transform.h"
+#include "MicroRenderer/Math/Utility.h"
 #include "MicroRenderer/Math/Vector2.h"
 #include "MicroRenderer/Math/Vector3.h"
 #include "MicroRenderer/Math/Vector4.h"

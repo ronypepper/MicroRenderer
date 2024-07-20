@@ -15,9 +15,9 @@ public:
 
     Renderer(uint32 width, uint32 height, uint8* buffer);
 
-    void rasterizeLineDDASafe(T x0, T x1, T y0, T y1, const Vector3<T> &color);
+    void rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
 
-    void rasterizeLineDDAUnsafe(T x0, T x1, T y0, T y1, const Vector3<T> &color);
+    void rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
 
     Framebuffer<T, color_coding> framebuffer;
 };

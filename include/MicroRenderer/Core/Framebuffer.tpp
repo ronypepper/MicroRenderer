@@ -47,96 +47,93 @@ namespace MicroRenderer {
     }
 
     template<typename T, ColorCoding color_coding>
-    void Framebuffer<T, color_coding>::drawPixel(uint32 x, const Vector3<T> &color) {
-        drawPixelAtNumber(x, color);
-    }
-
-    template<typename T, ColorCoding color_coding>
-    void Framebuffer<T, color_coding>::drawPixel(uint32 x, uint32 y, const Vector3<T> &color) {
-        drawPixelAtNumber(x + buffer_width * y, color);
-    }
-
-    template<typename T, ColorCoding color_coding>
-    void Framebuffer<T, color_coding>::drawNextPixelInX(const Vector3<T> &color) {
+    void Framebuffer<T, color_coding>::setCursor(uint32 x) {
         if (color_coding & (RGB888 | BGR888)) {
-            pixel_cursor += 3;
-            drawRGB888AtCursor(color);
+            pixel_cursor = buffer + x * 3;
         }
         else if (color_coding & (RGB565 | BGR565)) {
-            pixel_cursor += 2;
-            drawRGB565AtCursor(color);
+            pixel_cursor = buffer + x * 2;
         }
         else if (color_coding & (RGB444 | BGR444)) {
-            if (rgb444_last_alignment) { // == RGB444_ALIGNMENT_ODD
-                pixel_cursor += 2;
-                drawRGB444AtCursorEven(color);
-            }
-            else { // == RGB444_ALIGNMENT_EVEN
-                pixel_cursor += 1;
-                drawRGB444AtCursorOdd(color);
-            }
-        }
-    }
-
-    template<typename T, ColorCoding color_coding>
-    void Framebuffer<T, color_coding>::drawNextPixelInY(const Vector3<T> &color) {
-        pixel_cursor += next_line_cursor_increment;
-        if (color_coding & (RGB888 | BGR888)) {
-            drawRGB888AtCursor(color);
-        }
-        else if (color_coding & (RGB565 | BGR565)) {
-            drawRGB565AtCursor(color);
-        }
-        else if (color_coding & (RGB444 | BGR444)) {
-            if (rgb444_last_alignment) { // == RGB444_ALIGNMENT_ODD
-                drawRGB444AtCursorOdd(color);
-            }
-            else { // == RGB444_ALIGNMENT_EVEN
-                drawRGB444AtCursorEven(color);
-            }
-        }
-    }
-
-    template<typename T, ColorCoding color_coding>
-    void Framebuffer<T, color_coding>::drawNextPixelInXY(const Vector3<T> &color) {
-        pixel_cursor += next_line_cursor_increment;
-        if (color_coding & (RGB888 | BGR888)) {
-            pixel_cursor += 3;
-            drawRGB888AtCursor(color);
-        }
-        else if (color_coding & (RGB565 | BGR565)) {
-            pixel_cursor += 2;
-            drawRGB565AtCursor(color);
-        }
-        else if (color_coding & (RGB444 | BGR444)) {
-            if (rgb444_last_alignment) { // == RGB444_ALIGNMENT_ODD
-                pixel_cursor += 2;
-                drawRGB444AtCursorEven(color);
-            }
-            else { // == RGB444_ALIGNMENT_EVEN
-                pixel_cursor += 1;
-                drawRGB444AtCursorOdd(color);
-            }
-        }
-    }
-
-    template<typename T, ColorCoding color_coding>
-    void Framebuffer<T, color_coding>::drawPixelAtNumber(uint32 pixel_number, const Vector3<T> &color) {
-        if (color_coding & (RGB888 | BGR888)) {
-            pixel_cursor = buffer + pixel_number * 3;
-            drawRGB888AtCursor(color);
-        }
-        else if (color_coding & (RGB565 | BGR565)) {
-            pixel_cursor = buffer + pixel_number * 2;
-            drawRGB565AtCursor(color);
-        }
-        else if (color_coding & (RGB444 | BGR444)) {
-            if (pixel_number << 31) {
-                pixel_cursor = buffer + (pixel_number * 3 + 1);
-                drawRGB444AtCursorOdd(color);
+            if (x << 31) {
+                pixel_cursor = buffer + (x * 3 + 1);
+                rgb444_alignment = RGB444_ALIGNMENT_ODD;
             }
             else {
-                pixel_cursor = buffer + pixel_number * 3;
+                pixel_cursor = buffer + x * 3;
+                rgb444_alignment = RGB444_ALIGNMENT_EVEN;
+            }
+        }
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::setCursor(uint32 x, uint32 y) {
+        setCursor(x + buffer_width * y);
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorRight() {
+        if (color_coding & (RGB888 | BGR888)) {
+            pixel_cursor += 3;
+        }
+        else if (color_coding & (RGB565 | BGR565)) {
+            pixel_cursor += 2;
+        }
+        else if (color_coding & (RGB444 | BGR444)) {
+            if (rgb444_alignment) { // == RGB444_ALIGNMENT_ODD
+                pixel_cursor += 2;
+                rgb444_alignment = RGB444_ALIGNMENT_EVEN;
+            }
+            else { // == RGB444_ALIGNMENT_EVEN
+                pixel_cursor += 1;
+                rgb444_alignment = RGB444_ALIGNMENT_ODD;
+            }
+        }
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorLeft() {
+        if (color_coding & (RGB888 | BGR888)) {
+            pixel_cursor -= 3;
+        }
+        else if (color_coding & (RGB565 | BGR565)) {
+            pixel_cursor -= 2;
+        }
+        else if (color_coding & (RGB444 | BGR444)) {
+            if (rgb444_alignment) { // == RGB444_ALIGNMENT_ODD
+                pixel_cursor -= 1;
+                rgb444_alignment = RGB444_ALIGNMENT_EVEN;
+            }
+            else { // == RGB444_ALIGNMENT_EVEN
+                pixel_cursor -= 2;
+                rgb444_alignment = RGB444_ALIGNMENT_ODD;
+            }
+        }
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorUp() {
+        pixel_cursor += next_line_cursor_increment;
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorDown() {
+        pixel_cursor += next_line_cursor_increment;
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::drawPixelAtCursor(const Vector3<T> &color) {
+        if (color_coding & (RGB888 | BGR888)) {
+            drawRGB888AtCursor(color);
+        }
+        else if (color_coding & (RGB565 | BGR565)) {
+            drawRGB565AtCursor(color);
+        }
+        else if (color_coding & (RGB444 | BGR444)) {
+            if (rgb444_alignment) { // == RGB444_ALIGNMENT_ODD
+                drawRGB444AtCursorOdd(color);
+            }
+            else { // == RGB444_ALIGNMENT_EVEN
                 drawRGB444AtCursorEven(color);
             }
         }
@@ -166,8 +163,6 @@ namespace MicroRenderer {
     template<typename T, ColorCoding color_coding>
     void Framebuffer<T, color_coding>::drawRGB444AtCursorEven(const Vector3<T> &color) {
         // Pixel RGB spans: RGBr
-        rgb444_last_alignment = RGB444_ALIGNMENT_EVEN;
-
         const T red = color_coding == RGB444 ? color.r : color.b;
         const T green = color.g;
         const T blue = color_coding == RGB444 ? color.b : color.r;
@@ -181,8 +176,6 @@ namespace MicroRenderer {
     template<typename T, ColorCoding color_coding>
     void Framebuffer<T, color_coding>::drawRGB444AtCursorOdd(const Vector3<T> &color) {
         // Pixel RGB spans: bRGB
-        rgb444_last_alignment = RGB444_ALIGNMENT_ODD;
-
         const T red = color_coding == RGB444 ? color.r : color.b;
         const T green = color.g;
         const T blue = color_coding == RGB444 ? color.b : color.r;

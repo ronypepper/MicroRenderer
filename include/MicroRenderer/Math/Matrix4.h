@@ -18,6 +18,24 @@ public:
     };
 
     Matrix4() {}
+    Matrix4(T x0, T y0, T z0, T w0, T x1, T y1, T z1, T w1, T x2, T y2, T z2, T w2, T x3, T y3, T z3, T w3) {
+        components[0] = x0;
+        components[1] = y0;
+        components[2] = z0;
+        components[3] = w0;
+        components[4] = x1;
+        components[5] = y1;
+        components[6] = z1;
+        components[7] = w1;
+        components[8] = x2;
+        components[9] = y2;
+        components[10] = z2;
+        components[11] = w2;
+        components[12] = x3;
+        components[13] = y3;
+        components[14] = z3;
+        components[15] = w3;
+    }
     explicit Matrix4(T value) {
         components[0] = { value, 0, 0, 0 };
         components[1] = { 0, value, 0, 0 };
