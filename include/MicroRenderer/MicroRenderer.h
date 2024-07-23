@@ -16,3 +16,6 @@
 #include "MicroRenderer/Math/Vector2.h"
 #include "MicroRenderer/Math/Vector3.h"
 #include "MicroRenderer/Math/Vector4.h"
+
+// Shaders
+#include "MicroRenderer/Shaders/BaseShader.h"

@@ -19,7 +19,12 @@ public:
 
     void rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
 
+    template<template<typename> class ShaderClass>
+    void rasterizeTriangle(const Vector3<T>* v1, const Vector3<T>* v2, const Vector3<T>* v3);
+
     Framebuffer<T, color_coding> framebuffer;
+private:
+
 };
 
 } // namespace MicroRenderer

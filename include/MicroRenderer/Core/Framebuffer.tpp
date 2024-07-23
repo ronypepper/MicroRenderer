@@ -55,12 +55,12 @@ namespace MicroRenderer {
             pixel_cursor = buffer + x * 2;
         }
         else if (color_coding & (RGB444 | BGR444)) {
+            pixel_cursor = buffer + (x >> 1) * 3;
             if (x << 31) {
-                pixel_cursor = buffer + (x * 3 + 1);
+                pixel_cursor = buffer + 1;
                 rgb444_alignment = RGB444_ALIGNMENT_ODD;
             }
             else {
-                pixel_cursor = buffer + x * 3;
                 rgb444_alignment = RGB444_ALIGNMENT_EVEN;
             }
         }
@@ -92,6 +92,21 @@ namespace MicroRenderer {
     }
 
     template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorRightBy(uint32 delta_x) {
+        if (color_coding & (RGB888 | BGR888)) {
+            pixel_cursor += 3 * delta_x;
+        }
+        else if (color_coding & (RGB565 | BGR565)) {
+            pixel_cursor += 2 * delta_x;
+        }
+        else if (color_coding & (RGB444 | BGR444)) {
+            pixel_cursor += (delta_x >> 1) * 3;
+            if (delta_x << 31)
+                moveCursorRight();
+        }
+    }
+
+    template<typename T, ColorCoding color_coding>
     void Framebuffer<T, color_coding>::moveCursorLeft() {
         if (color_coding & (RGB888 | BGR888)) {
             pixel_cursor -= 3;
@@ -112,13 +127,38 @@ namespace MicroRenderer {
     }
 
     template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorLeftBy(uint32 delta_x) {
+        if (color_coding & (RGB888 | BGR888)) {
+            pixel_cursor -= 3 * delta_x;
+        }
+        else if (color_coding & (RGB565 | BGR565)) {
+            pixel_cursor -= 2 * delta_x;
+        }
+        else if (color_coding & (RGB444 | BGR444)) {
+            pixel_cursor -= (delta_x >> 1) * 3;
+            if (delta_x << 31)
+                moveCursorLeft();
+        }
+    }
+
+    template<typename T, ColorCoding color_coding>
     void Framebuffer<T, color_coding>::moveCursorUp() {
-        pixel_cursor += next_line_cursor_increment;
+        pixel_cursor -= next_line_cursor_increment;
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorUpBy(uint32 delta_y) {
+        pixel_cursor -= next_line_cursor_increment * delta_y;
     }
 
     template<typename T, ColorCoding color_coding>
     void Framebuffer<T, color_coding>::moveCursorDown() {
         pixel_cursor += next_line_cursor_increment;
+    }
+
+    template<typename T, ColorCoding color_coding>
+    void Framebuffer<T, color_coding>::moveCursorDownBy(uint32 delta_y) {
+        pixel_cursor += next_line_cursor_increment * delta_y;
     }
 
     template<typename T, ColorCoding color_coding>

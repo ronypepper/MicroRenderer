@@ -52,11 +52,19 @@ public:
 
     void moveCursorRight();
 
+    void moveCursorRightBy(uint32 delta_x);
+
     void moveCursorLeft();
+
+    void moveCursorLeftBy(uint32 delta_x);
 
     void moveCursorUp();
 
+    void moveCursorUpBy(uint32 delta_y);
+
     void moveCursorDown();
+
+    void moveCursorDownBy(uint32 delta_y);
 
     void drawPixelAtCursor(const Vector3<T> &color);
 private:
