@@ -57,7 +57,7 @@ namespace MicroRenderer {
         else if (color_coding & (RGB444 | BGR444)) {
             pixel_cursor = buffer + (x >> 1) * 3;
             if (x << 31) {
-                pixel_cursor = buffer + 1;
+                pixel_cursor += 1;
                 rgb444_alignment = RGB444_ALIGNMENT_ODD;
             }
             else {

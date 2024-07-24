@@ -107,46 +107,46 @@ namespace MicroRenderer {
     template<typename T, ColorCoding color_coding>
     template<template<typename> class ShaderClass>
     void Renderer<T, color_coding>::rasterizeTriangle(const Vector3<T>* v1, const Vector3<T>* v2, const Vector3<T>* v3) {
-        // Define lambda that draws lines between two edges.
-        T left_edge_x;
-        T right_edge_x;
+        // Triangle is split into upper and lower half-triangle, which are rasterized/shaded separately.
+        // Upper half: scanlines contained between top-most two edges.
+        // Lower half: scanlines contained between bottom-most two edges.
+
+        // Initialize shader.
         ShaderClass<T> shader;
-        auto rasterizeHalfTriangle = [&, this](uint32 num_of_lines, uint32 left_x_step, uint32 right_x_step) -> T {
-            // Set start and end of first line.
-            uint32 x_start = std::ceil(left_edge_x);
-            uint32 x_stop = std::floor(right_edge_x);
-            for (uint32 i = 0; i < num_of_lines; ++i) {
-                // Check if start/stop is exactly on edge.
-                //TODO
+        if (!shader.initializeShading(v1, v2, v3)) {
+            return;
+        }
+
+        // Define lamba that implements the "top-left" rule for rasterizing edges going exactly through pixel points.
+        auto isTopOrLeftEdge = [](const T delta_x, const T delta_y) -> bool {
+            const bool isLeftEdge = delta_y > 0;
+            const bool isTopEdge = delta_y == 0 && delta_x < 0;
+            return isLeftEdge || isTopEdge;
+        };
+
+        // Define lambda that draws lines between two edges.
+        auto rasterizeHalfTriangle = [&, this](uint32 y_start, uint32 y_stop, T& left_edge_x, T& right_edge_x, T left_x_step, T right_x_step) {
+            for (uint32 y = y_start; y < y_stop; ++y) {
+                // Set start and end of next line.
+                uint32 x_start = std::ceil(left_edge_x);
+                uint32 x_stop = std::floor(right_edge_x);
+
+                // Advance framebuffer and shader to start of next line.
+                framebuffer.setCursor(x_start, y);
+                shader.setPosition(x_start, y);
 
                 // Shade and draw rasterized line.
-                const uint32 line_length = x_stop - x_start;
-                for (uint32 j = 0; j <= line_length; ++j) {
-                    framebuffer.drawPixelAtCursor(shader.computeShading());
+                framebuffer.drawPixelAtCursor(shader.computeShading());
+                for (uint32 j = x_start; j < x_stop; ++j) {
                     framebuffer.moveCursorRight();
-                    shader.advanceShadingInX();
+                    shader.movePositionRight();
+                    framebuffer.drawPixelAtCursor(shader.computeShading());
                 }
 
                 // Compute x-coords of edges at next scanline.
                 left_edge_x += left_x_step;
                 right_edge_x += right_x_step;
-
-                // Set start of next line.
-                x_start = std::ceil(left_edge_x);
-
-                // Advance framebuffer and shader to start of next line.
-                const uint32 delta_x = x_stop - x_start; //TODO: +1?
-                framebuffer.moveCursorLeftBy(delta_x);
-                shader.advanceShadingInXBy(delta_x);
-
-                // Set end of next line.
-                x_stop = std::floor(right_edge_x);
-
-                // Advance framebuffer and shader to next scanline.
-                framebuffer.moveCursorDown();
-                shader.advanceShadingInY();
             }
-            return x_stop;
         };
 
         // Sort vertices by y: v1->y < v2->y < v3->y.
@@ -157,67 +157,101 @@ namespace MicroRenderer {
         if (v2->y > v3->y)
             std::swap(v2, v3);
 
-        // Compute initial y-coord.
-        // Compute last y-coord. rasterized between top-most two edges.
+        // Compute edge deltas.
+        const T dx_top_middle = v2->x - v1->x;
+        const T dy_top_middle = v2->y - v1->y;
+        const T dx_top_bottom = v3->x - v1->x;
+        const T dy_top_bottom = v3->y - v1->y;
+        const T dy_middle_bottom = v3->y - v2->y;
+        const T dx_middle_bottom = v3->x - v2->x;
+
+        // Check for degenerate triangle.
+        constexpr T DEGENERATE_THRESHOLD = static_cast<T>(0.001);
+        if (std::abs(dx_top_middle * dy_top_bottom - dy_top_middle * dx_top_bottom) < DEGENERATE_THRESHOLD)
+            return;
+
+        // Compute start and stop y-coords of upper and lower half-triangle.
         const T y_start = std::ceil(v1->y);
-        const T y_middle = std::floor(v2->y);
-        const T y_end = std::floor(v3->y);
-        const uint32 top_tri_line_num = y_middle - y_start;
-        const uint32 bottom_tri_line_num = y_end - y_middle;
+        const T y_middle = std::ceil(v2->y);
+        const T y_end = std::floor(v3->y) + static_cast<T>(1.0);
 
-        // Compute inverse slopes of topmost edges.
-        const T delta_y_top = v2->y - v1->y;
-        const T delta_y_middle = v3->y - v1->y;
-        const T delta_y_bottom = v3->y - v2->y;
+        // // Adjust edge x-coords according to "top-left" rule.
+        // T x_start_left_edge = v1->x;
+        // if (dy_top_middle == static_cast<T>(0.0)) {
+        //     // v1-v2 is top edge and v1-v3 is left edge.
+        //     v1->x += std::numeric_limits<T>::min();
+        //     v3->x += std::numeric_limits<T>::min();
+        // }
+        // else {
+        //     if (dx_middle_bottom > static_cast<T>(0.0)) {
+        //         // v1-v2 is left edge.
+        //         v1->x += std::numeric_limits<T>::min();
+        //         v2->x += std::numeric_limits<T>::min();
+        //         if (dy_middle_bottom > static_cast<T>(0.0)) {
+        //             // v2-v3 is left edge.
+        //             v1->x += std::numeric_limits<T>::min();
+        //         }
+        //     }
+        //     else {
+        //         // v1-v3 is left edge.
+        //     }
+        // }
 
-        if (top_tri_line_num > 0) {
-            // delta_y_middle is also != 0.
-            T left_x_step = (v2->x - v1->x) / delta_y_top;
-            T right_x_step = (v3->x - v1->x) / delta_y_middle;
-            bool left_edge_extends_lower = false;
-            if (left_x_step > right_x_step) {
-                left_edge_extends_lower = true;
-                std::swap(left_x_step, right_x_step);
+        // Compute edge properties and rasterize/shade.
+        T left_edge_x;
+        T right_edge_x;
+        T right_x_step;
+        T left_x_step;
+        const bool swap_edges = dx_top_middle > dx_top_bottom;
+        constexpr T MIN_DELTA_Y = static_cast<T>(0.001);
+        if (y_middle > y_start && dy_top_middle > MIN_DELTA_Y) { // Does upper half-triangle exist?
+            // Compute x-coords and inverse slopes of edges at first scanline of upper half triangle.
+            if (swap_edges) {
+                left_x_step = dx_top_bottom / dy_top_bottom;
+                right_x_step = dx_top_middle / dy_top_middle;
             }
-
-            // Compute x-coords of top-most two edges at initial y-coord.
+            else {
+                left_x_step = dx_top_middle / dy_top_middle;
+                right_x_step = dx_top_bottom / dy_top_bottom;
+            }
             left_edge_x = v1->x + left_x_step * (y_start - v1->y);
             right_edge_x = v1->x + right_x_step * (y_start - v1->y);
 
-            // Initialize framebuffer position and shader.
-            const uint32 x_start = std::ceil(left_edge_x);
-            framebuffer.setCursor(x_start, y_start);
-            shader.initializeShading(v1, v2, v3, x_start, y_start);
+            // Draw upper half-triangle.
+            rasterizeHalfTriangle(static_cast<uint32>(y_start), static_cast<uint32>(y_middle), left_edge_x, right_edge_x, left_x_step, right_x_step);
 
-            // Draw upper half of triangle (horizontally between top-most two edges).
-            rasterizeHalfTriangle(top_tri_line_num + 1);
-
-            if (bottom_tri_line_num > 0) {
-                // Change inv.slope, x-coord and last y-coord to rasterize lower half of triangle.
-                const T new_edge_x_step = (v3->x - v2->x) / delta_y_bottom;
-                const T new_edge_x = v2->x + new_edge_x_step * (y_middle + 1 - v2->y);
-                if (left_edge_extends_lower) {
-                    right_x_step = new_edge_x_step;
-                    right_edge_x = new_edge_x;
+            if (y_end > y_middle && dy_middle_bottom > MIN_DELTA_Y) { // Does lower half-triangle exist?
+                // Compute x-coord and inverse slope of new edge at first scanline of lower half triangle.
+                if (swap_edges) {
+                    right_x_step = dx_middle_bottom / dy_middle_bottom;
+                    right_edge_x = v2->x + right_x_step * (y_middle - v2->y);
                 }
                 else {
-                    left_x_step = new_edge_x_step;
-                    left_edge_x = new_edge_x;
+                    left_x_step = dx_middle_bottom / dy_middle_bottom;
+                    left_edge_x = v2->x + left_x_step * (y_middle - v2->y);
                 }
 
-                // Draw lower half of triangle (horizontally between bottom-most two edges).
-                rasterizeHalfTriangle(bottom_tri_line_num);
+                // Draw lower half-triangle.
+                rasterizeHalfTriangle(static_cast<uint32>(y_middle), static_cast<uint32>(y_end), left_edge_x, right_edge_x, left_x_step, right_x_step);
             }
         }
-        else if (bottom_tri_line_num > 0) {
+        else if (y_end > y_middle && dy_middle_bottom > MIN_DELTA_Y) { // Does lower half-triangle exist?
+            // Compute x-coords and inverse slopes of edges at first scanline of lower half triangle.
+            if (swap_edges) {
+                left_x_step = dx_top_bottom / dy_top_bottom;
+                right_x_step = dx_middle_bottom / dy_middle_bottom;
+                left_edge_x = v1->x + left_x_step * (y_middle - v1->y);
+                right_edge_x = v2->x + right_x_step * (y_middle - v2->y);
+            }
+            else {
+                left_x_step = dx_middle_bottom / dy_middle_bottom;
+                right_x_step = dx_top_bottom / dy_top_bottom;
+                left_edge_x = v2->x + right_x_step * (y_middle - v2->y);
+                right_edge_x = v1->x + right_x_step * (y_middle - v1->y);
+            }
 
-        }
-
-        if (delta_y_top != 0.0) { //TODO: epsilon
-
-        }
-        else {
-
+            // Draw lower half-triangle.
+            rasterizeHalfTriangle(static_cast<uint32>(y_middle), static_cast<uint32>(y_end), left_edge_x, right_edge_x, left_x_step, right_x_step);
         }
     }
 } // namespace MicroRenderer
