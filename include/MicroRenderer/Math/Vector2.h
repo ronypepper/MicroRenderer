@@ -31,6 +31,7 @@ public:
         };
     };
 
+    // Constructors.
     Vector2() {}
     Vector2(T value) {
         x = value;
@@ -45,6 +46,7 @@ public:
         y = other.y;
     }
 
+    // Assignment operator.
     Vector2& operator=(const Vector2& other) {
         x = other.x;
         y = other.y;
@@ -124,7 +126,7 @@ public:
     }
 
     // Negative operator.
-    Vector2 operator-() {
+    Vector2 operator-() const {
         return {-x, -y};
     }
 
@@ -188,7 +190,7 @@ public:
     }
 
     // Normalization with zero-check.
-    void normalizeSafe(T epsilon = 0.001) {
+    void normalizeSafe(T epsilon = static_cast<T>(0.001)) {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
             *this /= sqLength;
@@ -201,12 +203,12 @@ public:
     }
 
     // Return normalized copy with zero-check, returns zero-vector on fail.
-    Vector2 getNormalized(T epsilon = 0.001) const {
+    Vector2 getNormalized(T epsilon = static_cast<T>(0.001)) const {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
             return *this / sqLength;
         }
-        return {0};
+        return {static_cast<T>(0.0)};
     }
 
     // Max and Min of components.

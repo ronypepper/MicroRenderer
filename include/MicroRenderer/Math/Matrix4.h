@@ -36,11 +36,11 @@ public:
         components[14] = z3;
         components[15] = w3;
     }
-    explicit Matrix4(T value) {
-        components[0] = { value, 0, 0, 0 };
-        components[1] = { 0, value, 0, 0 };
-        components[2] = { 0, 0, value, 0 };
-        components[3] = { 0, 0, 0, value };
+    Matrix4(T value) {
+        columns[0] = { value, static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(0.0) };
+        columns[1] = { static_cast<T>(0.0), value, static_cast<T>(0.0), static_cast<T>(0.0) };
+        columns[2] = { static_cast<T>(0.0), static_cast<T>(0.0), value, static_cast<T>(0.0) };
+        columns[3] = { static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(0.0), value };
     }
     Matrix4(const Vector4<T>& Col_1, const Vector4<T>& Col_2, const Vector4<T>& Col_3, const Vector4<T>& Col_4) {
         columns[0] = Col_1;

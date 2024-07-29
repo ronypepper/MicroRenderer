@@ -4,6 +4,7 @@
 
 #pragma once
 #include "ScalarTypes.h"
+#include "Vector2.h"
 #include "cmath"
 
 namespace MicroRenderer {
@@ -28,6 +29,7 @@ public:
         };
     };
 
+    // Constructors.
     Vector3() {}
     Vector3(T value) {
         x = value;
@@ -44,7 +46,18 @@ public:
         y = other.y;
         z = other.z;
     }
+    Vector3(const Vector2<T>& xy, T z) {
+        this->x = xy.x;
+        this->y = xy.y;
+        this->z = z;
+    }
+    Vector3(T x, const Vector2<T>& yz) {
+        this->x = x;
+        this->y = yz.x;
+        this->z = yz.y;
+    }
 
+    // Assignment operator.
     Vector3& operator=(const Vector3& other) {
         x = other.x;
         y = other.y;
@@ -58,6 +71,12 @@ public:
     }
     const T& operator[](size_t idx) const {
         return components[idx];
+    }
+
+    // Sub-vector access.
+    Vector2<T> getXY()
+    {
+        return Vector2<T>(x, y);
     }
 
     // Relational operators.
@@ -129,7 +148,7 @@ public:
     }
 
     // Negative operator.
-    Vector3 operator-() {
+    Vector3 operator-() const {
         return {-x, -y, -z};
     }
 
@@ -202,7 +221,7 @@ public:
     }
 
     // Normalization with zero-check.
-    void normalizeSafe(T epsilon = 0.001) {
+    void normalizeSafe(T epsilon = static_cast<T>(0.001)) {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
             *this /= sqLength;
@@ -215,12 +234,12 @@ public:
     }
 
     // Return normalized copy with zero-check, returns zero-vector on fail.
-    Vector3 getNormalized(T epsilon = 0.001) const {
+    Vector3 getNormalized(T epsilon = static_cast<T>(0.001)) const {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
             return *this / sqLength;
         }
-        return {0};
+        return {static_cast<T>(0.0)};
     }
 
     // Max and Min of components.

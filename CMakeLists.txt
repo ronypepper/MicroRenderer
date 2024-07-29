@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(MicroRenderer)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(MicroRenderer test/main.cpp
         include/MicroRenderer/MicroRenderer.h
@@ -17,7 +17,16 @@ add_executable(MicroRenderer test/main.cpp
         include/MicroRenderer/Core/FrameBuffer.h
         include/MicroRenderer/Core/Framebuffer.tpp
         include/MicroRenderer/Math/Utility.h
-        include/MicroRenderer/Shaders/BaseShader.h
+        include/MicroRenderer/Core/Shading/VertexShader.h
+        include/MicroRenderer/Core/Shading/FragmentShader.h
+        include/MicroRenderer/Core/Shading/ShaderProgram.h
+        include/MicroRenderer/Core/Shading/ShaderInterface.h
+        include/MicroRenderer/Shaders/CustomShader/CustomVertexShader.h
+        include/MicroRenderer/Shaders/CustomShader/CustomFragmentShader.h
+        include/MicroRenderer/Shaders/CustomShader/CustomShaderInterface.h
+        include/MicroRenderer/Core/Shading/TriangleAssembler.h
+        include/MicroRenderer/Shaders/CustomShader/CustomTriangleAssembler.h
+        include/MicroRenderer/Shaders/CustomShader/CustomShaderProgram.h
 )
 
 target_include_directories(MicroRenderer PUBLIC include)

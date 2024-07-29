@@ -5,6 +5,7 @@
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Math/Vector3.h"
+#include <string>
 
 namespace MicroRenderer {
 
@@ -20,19 +21,19 @@ enum ColorCoding {
     BGR444 = 1u << 5
 };
 
-template<typename T, ColorCoding color_coding>
+template<typename T, ColorCoding COLOR_CODING>
 class Framebuffer {
 public:
 
-    Framebuffer(uint32 width, uint32 height, uint8* address);
+    Framebuffer(int32 width, int32 height, uint8* address);
 
-    void setResolution(uint32 width, uint32 height);
+    void setResolution(int32 width, int32 height);
 
-    uint32 getWidth() const {
+    int32 getWidth() const {
         return buffer_width;
     }
 
-    uint32 getHeight() const {
+    int32 getHeight() const {
         return buffer_height;
     }
 
@@ -44,43 +45,48 @@ public:
 
     void clearBuffer();
 
-    void fillRect(uint32 x0, uint32 y0, uint32 x1, uint32 y1, const Vector3<T> &color);
+    void fillRect(int32 x0, int32 y0, int32 x1, int32 y1, const Vector3<T> &color);
 
-    void setCursor(uint32 x);
+    void setCursor(int32 x);
 
-    void setCursor(uint32 x, uint32 y);
+    void setCursor(int32 x, int32 y);
 
     void moveCursorRight();
 
-    void moveCursorRightBy(uint32 delta_x);
+    void moveCursorRightBy(int32 delta_x);
 
     void moveCursorLeft();
 
-    void moveCursorLeftBy(uint32 delta_x);
+    void moveCursorLeftBy(int32 delta_x);
 
     void moveCursorUp();
 
-    void moveCursorUpBy(uint32 delta_y);
+    void moveCursorUpBy(int32 delta_y);
 
     void moveCursorDown();
 
-    void moveCursorDownBy(uint32 delta_y);
+    void moveCursorDownBy(int32 delta_y);
 
-    void drawPixelAtCursor(const Vector3<T> &color);
+    void drawPixelAtCursor(const Vector3<T>& color);
+
+    Vector3<uint8> getPixelAtCursor();
+
+    void saveToPPMImage(const std::string& file_name);
+
 private:
-    void drawRGB888AtCursor(const Vector3<T> &color);
+    void drawRGB888AtCursor(const Vector3<T>& color);
 
-    void drawRGB565AtCursor(const Vector3<T> &color);
+    void drawRGB565AtCursor(const Vector3<T>& color);
 
-    void drawRGB444AtCursorEven(const Vector3<T> &color);
+    void drawRGB444AtCursor(const Vector3<T>& color);
 
-    void drawRGB444AtCursorOdd(const Vector3<T> &color);
+    bool verifyCursorInsideBuffer(const uint8* cursor) const;
 
     // Buffer width.
-    uint32 buffer_width = 0;
+    int32 buffer_width = 0;
 
     // Buffer height.
-    uint32 buffer_height = 0;
+    int32 buffer_height = 0;
 
     // Pointer to buffer memory.
     uint8* buffer = nullptr;
@@ -89,10 +95,10 @@ private:
     uint8* pixel_cursor = nullptr;
 
     // Helper variable to allow efficient x-incremental drawing to buffer in RGB444 mode.
-    uint8 rgb444_alignment = RGB444_ALIGNMENT_EVEN;
+    uint32 rgb444_alignment = RGB444_ALIGNMENT_EVEN;
 
     // Helper variable to allow efficient y-incremental drawing to buffer.
-    uint32 next_line_cursor_increment = 0;
+    int32 next_line_cursor_increment = 0;
 };
 
 } // namespace MicroRenderer

@@ -4,6 +4,8 @@
 
 #pragma once
 #include "ScalarTypes.h"
+#include "Vector3.h"
+#include "Vector2.h"
 #include "cmath"
 
 namespace MicroRenderer {
@@ -30,6 +32,7 @@ public:
         };
     };
 
+    // Constructors.
     Vector4() {}
     Vector4(T value) {
         x = value;
@@ -49,7 +52,44 @@ public:
         z = other.z;
         w = other.w;
     }
+    Vector4(const Vector3<T>& xyz, T w) {
+        this->x = xyz.x;
+        this->y = xyz.y;
+        this->z = xyz.z;
+        this->w = w;
+    }
+    Vector4(T x, const Vector3<T>& yzw) {
+        this->x = x;
+        this->y = yzw.x;
+        this->z = yzw.y;
+        this->w = yzw.z;
+    }
+    Vector4(const Vector2<T>& xy, const Vector2<T>& zw) {
+        this->x = xy.x;
+        this->y = xy.y;
+        this->z = zw.x;
+        this->w = zw.y;
+    }
+    Vector4(const Vector2<T>& xy, T z, T w) {
+        this->x = xy.x;
+        this->y = xy.y;
+        this->z = z;
+        this->w = w;
+    }
+    Vector4(T x, const Vector2<T>& yz, T w) {
+        this->x = x;
+        this->y = yz.x;
+        this->z = yz.y;
+        this->w = w;
+    }
+    Vector4(T x, T y, const Vector2<T>& zw) {
+        this->x = x;
+        this->y = y;
+        this->z = zw.x;
+        this->w = zw.y;
+    }
 
+    // Assignment operator.
     Vector4& operator=(const Vector4& other) {
         x = other.x;
         y = other.y;
@@ -64,6 +104,16 @@ public:
     }
     const T& operator[](size_t idx) const {
         return components[idx];
+    }
+
+    // Sub-vector access.
+    Vector2<T> getXY()
+    {
+        return Vector2<T>(x, y);
+    }
+    Vector3<T> getXYZ()
+    {
+        return Vector3<T>(x, y, z);
     }
 
     // Relational operators.
@@ -139,7 +189,7 @@ public:
     }
 
     // Negative operator.
-    Vector4 operator-() {
+    Vector4 operator-() const {
         return {-x, -y, -z, -w};
     }
 
@@ -211,7 +261,7 @@ public:
     }
 
     // Normalization with zero-check.
-    void normalizeSafe(T epsilon = 0.001) {
+    void normalizeSafe(T epsilon = static_cast<T>(0.001)) {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
             *this /= sqLength;
@@ -224,12 +274,12 @@ public:
     }
 
     // Return normalized copy with zero-check, returns zero-vector on fail.
-    Vector4 getNormalized(T epsilon = 0.001) const {
+    Vector4 getNormalized(T epsilon = static_cast<T>(0.001)) const {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
             return *this / sqLength;
         }
-        return {0};
+        return {static_cast<T>(0.0)};
     }
 
     // Max and Min of components.
