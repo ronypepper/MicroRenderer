@@ -319,148 +319,123 @@ namespace MicroRenderer {
     bool Renderer<CfgType, Config>::setupTriangleRasterization(const Vector3<T>& v1_screen_pos,
                                                                const Vector3<T>& v2_screen_pos,
                                                                const Vector3<T>& v3_screen_pos,
-                                                               RasterizationData<T>& rasterization, int16& y_start)
+                                                               RasterizationData<T>& rasterization, int16& start_scanline)
     {
-
-        // Lambda for setting up a triangle for rasterization.
-        auto orderedSetup = [&rasterization, &y_start](const Vector3<T>& start, const Vector3<T>& left,
-                                                       const Vector3<T>& right, const Vector2<T>& start_to_left,
-                                                       const Vector2<T>& start_to_right,
-                                                       const Vector2<T>& left_to_right) -> bool
-        {
-            // Triangle is rasterized separately for upper and lower half-triangle
-            // (separated at scanline through middle vertex)
-
-            // Determine if there are one or two half triangles and compute their edge slopes and edge starts.
-            // Checks against division by zero are performed.
-            constexpr T MIN_DELTA_Y = static_cast<T>(0.001);
-            const bool start_right_too_close = start_to_right.y < MIN_DELTA_Y;
-            const bool start_left_too_close = start_to_left.y < MIN_DELTA_Y;
-            const bool left_right_too_close = std::abs(left_to_right.y) < MIN_DELTA_Y;
-            if (start_right_too_close || start_left_too_close) {
-                if (left_right_too_close) {
-                    // No triangle at all.
-                    return false;
-                }
-                if (start_right_too_close) {
-                    // Only one half-triangle with flat start, pointing left or up.
-                    rasterization.y_halftri_end = static_cast<int16>(std::ceil(left.y));
-                    rasterization.left_dx_per_dy = start_to_left.x / start_to_left.y;
-                    rasterization.right_x = right.x;
-                }
-                else {
-                    // Only one half-triangle with flat start, pointing right.
-                    rasterization.y_halftri_end = static_cast<int16>(std::ceil(right.y));
-                    rasterization.left_dx_per_dy = start_to_right.x / start_to_right.y;
-                    rasterization.right_x = left.x;
-                }
-                rasterization.y_fulltri_end = rasterization.y_halftri_end;
-                rasterization.left_x = start.x;
-                rasterization.right_dx_per_dy = left_to_right.x / left_to_right.y;
-
-                // Compute depth gradient.
-                const T left_to_right_z = right.z - left.z;
-                rasterization.diz_per_dx = left_to_right_z / left_to_right.x;
-                rasterization.diz_per_dy = left_to_right_z / left_to_right.y;
-            }
-            else {
-                rasterization.left_dx_per_dy = start_to_left.x / start_to_left.y;
-                rasterization.right_dx_per_dy = start_to_right.x / start_to_right.y;
-                rasterization.left_x = start.x;
-                rasterization.right_x = start.x;
-
-                if (left_right_too_close) {
-                    // Only one half-triangle with flat end.
-                    rasterization.y_halftri_end = static_cast<int16>(std::ceil(std::min(left.y, right.y)));
-                    rasterization.y_fulltri_end = rasterization.y_halftri_end;
-                }
-                else {
-                    // Two half triangles.
-                    rasterization.last_dx_per_dy = left_to_right.x / left_to_right.y;
-                    if (left_to_right.y > static_cast<T>(0.0)) {
-                        // Left is middle.
-                        const T scanline_middle = std::ceil(left.y); // First scanline of lower half triangle.
-                        rasterization.y_halftri_end = static_cast<int16>(scanline_middle);
-                        rasterization.y_fulltri_end = static_cast<int16>(std::ceil(right.y));
-                        rasterization.last_x = left.x + rasterization.last_dx_per_dy * (scanline_middle - left.y);
-                    }
-                    else {
-                        // Right is middle.
-                        rasterization.last_dx_per_dy = left_to_right.x / left_to_right.y;
-                        const T scanline_middle = std::ceil(right.y); // First scanline of lower half triangle.
-                        rasterization.y_halftri_end = static_cast<int16>(scanline_middle);
-                        rasterization.y_fulltri_end = static_cast<int16>(std::ceil(left.y));
-                        rasterization.last_x = right.x + rasterization.last_dx_per_dy * (scanline_middle - right.y);
-                    }
-                }
-            }
-
-            // Compute first scanline and its offset from start vertex.
-            const T scanline_start = std::ceil(start.y);
-            y_start = static_cast<int16>(scanline_start);
-            const T y_start_offset = scanline_start - start.y;
-
-            // Adjust edge starts to start scanline.
-            rasterization.left_x += rasterization.left_dx_per_dy * y_start_offset;
-            rasterization.right_x += rasterization.right_dx_per_dy * y_start_offset;
-
-            // Compute depth gradient and start depth on first scanline.
-            const T start_to_left_z = left.z - start.z;
-            rasterization.diz_per_dx = start_to_left_z / start_to_left.x;
-            rasterization.diz_per_dy = start_to_left_z / start_to_left.y;
-            rasterization.left_inverse_z = start.z + rasterization.diz_per_dy * y_start_offset;
-
-            return true;
-        };
-
-        // Compute triangle edge deltas.
-        const Vector2<T> v1_to_v2 = {v2_screen_pos.x - v1_screen_pos.x, v2_screen_pos.y - v1_screen_pos.y};
-        const Vector2<T> v1_to_v3 = {v3_screen_pos.x - v1_screen_pos.x, v3_screen_pos.y - v1_screen_pos.y};
-        const Vector2<T> v2_to_v3 = {v3_screen_pos.x - v2_screen_pos.x, v3_screen_pos.y - v2_screen_pos.y};
+        const Vector3<T>* positions[3] = {&v1_screen_pos, &v2_screen_pos, &v3_screen_pos};
 
         // Backface culling and degenerate check.
+        const Vector2<T> v1_to_v2 = {v2_screen_pos.x - v1_screen_pos.x, v2_screen_pos.y - v1_screen_pos.y};
+        const Vector2<T> v1_to_v3 = {v3_screen_pos.x - v1_screen_pos.x, v3_screen_pos.y - v1_screen_pos.y};
         constexpr T DEGENERATE_THRESHOLD = static_cast<T>(0.001);
         const T area = v1_to_v2.x * v1_to_v3.y - v1_to_v2.y * v1_to_v3.x;
         if (area > DEGENERATE_THRESHOLD)
             return false;
 
-        // Determine vertex order and perform rasterization setup.
-        if (v1_to_v2.y >= static_cast<T>(0.0)) {
-            // Vertex 2 is NOT bottommost.
-            if (v1_to_v3.y >= static_cast<T>(0.0)) {
-                // Vertex 1 is bottommost.
-                if (v2_to_v3.x >= static_cast<T>(0.0)) {
-                    // Vertex 2 is left of Vertex 3.
-                    return orderedSetup(v1_screen_pos, v2_screen_pos, v3_screen_pos, v1_to_v2, v1_to_v3, v2_to_v3);
+        // Sort vertices in y, starting with smallest y.
+        uint8 start_idx = 0;
+        uint8 middle_idx = 1;
+        uint8 end_idx = 2;
+        if (positions[start_idx]->y > positions[end_idx]->y)
+            std::swap(start_idx, end_idx);
+        if (positions[start_idx]->y > positions[middle_idx]->y)
+            std::swap(start_idx, middle_idx);
+        if (positions[middle_idx]->y > positions[end_idx]->y)
+            std::swap(middle_idx, end_idx);
+
+        // Triangle is rasterized separately for upper and lower half-triangle
+        // (separated at scanline through middle vertex)
+
+        // Check half-triangle size along y and draw only those that are thick enough to avoid zero-divisions.
+        const T dy_start_middle = positions[middle_idx]->y - positions[start_idx]->y;
+        const T dy_middle_end = positions[end_idx]->y - positions[middle_idx]->y;
+        constexpr T MIN_DELTA_Y = static_cast<T>(0.001);
+        if (dy_start_middle < MIN_DELTA_Y && dy_middle_end < MIN_DELTA_Y) {
+            // Both half-triangles are too lean in y. Do not draw anything.
+            return false;
+        }
+
+        // Shift left and flat-top edges by a small amount to deterministically draw edges going exactly through pixels.
+        constexpr T TOPLEFT_EDGE_SHIFT = static_cast<T>(0.001);
+
+        uint8 peak_idx, left_idx, right_idx;
+        T y_start;
+        if (dy_start_middle < MIN_DELTA_Y) {
+            // First half-triangle is too lean in y. Only draw second half-triangle.
+            peak_idx = end_idx;
+            right_idx = peak_idx == 2 ? 0 : peak_idx + 1;
+            left_idx = right_idx == 2 ? 0 : right_idx + 1;
+
+            /// Compute edge start x-coordinates and depth at left edge.
+            rasterization.left_x = positions[left_idx]->x + TOPLEFT_EDGE_SHIFT; // Shift left edge slightly.
+            rasterization.right_x = positions[right_idx]->x;
+            rasterization.left_inverse_z = positions[left_idx]->z;
+
+            // Compute half-triangle start and end y-coordinates.
+            y_start = std::min(positions[left_idx]->y, positions[right_idx]->y) + TOPLEFT_EDGE_SHIFT; // Shift top edge slightly.
+            const T y_end = positions[peak_idx]->y;
+            rasterization.y_halftri_end = std::floor(y_end);
+            rasterization.y_fulltri_end = rasterization.y_halftri_end;
+        }
+        else {
+            // At least the first half-triangle is drawn.
+            peak_idx = start_idx;
+            left_idx = peak_idx == 2 ? 0 : peak_idx + 1;
+            right_idx = left_idx == 2 ? 0 : left_idx + 1;
+
+            // Compute edge start x-coordinates and depth at left edge.
+            rasterization.left_x = positions[peak_idx]->x + TOPLEFT_EDGE_SHIFT; // Shift left edge slightly.
+            rasterization.right_x = positions[peak_idx]->x;
+            rasterization.left_inverse_z = positions[peak_idx]->z;
+
+            // Compute (half-)triangle start and end y-coordinates.
+            y_start = positions[peak_idx]->y;
+            if (dy_start_middle < MIN_DELTA_Y) {
+                // Second half-triangle is too lean in y. Only draw first half-triangle.
+                const T y_end = std::min(positions[left_idx]->y, positions[right_idx]->y);
+                rasterization.y_halftri_end = std::floor(y_end);
+                rasterization.y_fulltri_end = rasterization.y_halftri_end;
+            }
+            else {
+                // Draw both half-triangles.
+                const T y_end = positions[end_idx]->y;
+                const T y_middle = positions[middle_idx]->y;
+                rasterization.y_halftri_end = std::floor(y_middle);
+                rasterization.y_fulltri_end = std::floor(y_end);
+
+                // Compute second half-triangle changed edge slope and x-start coordinate.
+                rasterization.last_dx_per_dy = (positions[end_idx]->x - positions[middle_idx]->x) / (positions[end_idx]->y - positions[middle_idx]->y);
+                const T middle_offset = rasterization.y_halftri_end - y_middle;
+                rasterization.last_x = positions[middle_idx]->x + rasterization.last_dx_per_dy * middle_offset;
+                if (middle_idx == left_idx) {
+                    rasterization.last_x += TOPLEFT_EDGE_SHIFT; // Shift left edge slightly.
                 }
-                // Vertex 3 is left of Vertex 2.
-                return orderedSetup(v1_screen_pos, v3_screen_pos, v2_screen_pos, v1_to_v3, v1_to_v2, -v2_to_v3);
             }
-            // Vertex 3 is bottommost.
-            if (v1_to_v2.x >= static_cast<T>(0.0)) {
-                // Vertex 1 is left of Vertex 2.
-                return orderedSetup(v3_screen_pos, v1_screen_pos, v2_screen_pos, -v1_to_v3, -v2_to_v3, v1_to_v2);
-            }
-            // Vertex 2 is left of Vertex 1.
-            return orderedSetup(v3_screen_pos, v2_screen_pos, v1_screen_pos, -v2_to_v3, -v1_to_v3, -v1_to_v2);
         }
-        // Vertex 1 is NOT bottommost.
-        if (v2_to_v3.y >= static_cast<T>(0.0)) {
-            // Vertex 2 is bottommost.
-            if (v1_to_v3.x >= static_cast<T>(0.0)) {
-                // Vertex 1 is left of Vertex 3.
-                return orderedSetup(v2_screen_pos, v1_screen_pos, v3_screen_pos, -v1_to_v2, v2_to_v3, v1_to_v3);
-            }
-            // Vertex 3 is left of Vertex 1.
-            return orderedSetup(v2_screen_pos, v3_screen_pos, v1_screen_pos, v2_to_v3, -v1_to_v2, -v1_to_v3);
-        }
-        // Vertex 3 is bottommost.
-        if (v1_to_v2.x >= static_cast<T>(0.0)) {
-            // Vertex 1 is left of Vertex 2.
-            return orderedSetup(v3_screen_pos, v1_screen_pos, v2_screen_pos, -v1_to_v3, -v2_to_v3, v1_to_v2);
-        }
-        // Vertex 2 is left of Vertex 1.
-        return orderedSetup(v3_screen_pos, v2_screen_pos, v1_screen_pos, -v2_to_v3, -v1_to_v3, -v1_to_v2);
+
+        // Compute edge slopes.
+        const T dx_peak_left = positions[left_idx]->x - positions[peak_idx]->x;
+        const T dy_peak_left = positions[left_idx]->y - positions[peak_idx]->y;
+        rasterization.left_dx_per_dy = dx_peak_left / dy_peak_left;
+        const T dx_peak_right = positions[right_idx]->x - positions[peak_idx]->x;
+        const T dy_peak_right = positions[right_idx]->y - positions[peak_idx]->y;
+        rasterization.right_dx_per_dy = dx_peak_right / dy_peak_right;
+
+        // Compute depth gradient.
+        const T dz_peak_left = positions[left_idx]->z - positions[peak_idx]->z;
+        rasterization.diz_per_dx = dz_peak_left / dx_peak_left;
+        rasterization.diz_per_dy = dz_peak_left / dy_peak_left;
+
+        // Compute start scanline.
+        start_scanline = std::ceil(y_start);
+
+        // Adjust edge positions to start scanline and depth to left edge position.
+        const T start_offset = start_scanline - y_start; // This adjustment is actually wrong by TOPLEFT_EDGE_SHIFT in case of only drawing second triangle. Does not matter however.
+        const T left_x_adjustment = rasterization.left_dx_per_dy * start_offset;
+        rasterization.left_x += left_x_adjustment;
+        rasterization.right_x += rasterization.right_dx_per_dy * start_offset;
+        rasterization.left_inverse_z += rasterization.diz_per_dy * start_offset + rasterization.diz_per_dx * left_x_adjustment;
+
+        return true;
     }
 
     template <typename CfgType, CfgType Config>
@@ -471,35 +446,6 @@ namespace MicroRenderer {
         // Upper half: scanlines contained between top-most two edges.
         // Lower half: scanlines contained between bottom-most two edges.
 
-        // Define lamba that implements the "top-left" rule for rasterizing edges going exactly through pixel points.
-        auto isTopOrLeftEdge = [](const T delta_x, const T delta_y) -> bool {
-            const bool isLeftEdge = delta_y > 0;
-            const bool isTopEdge = delta_y == 0 && delta_x < 0;
-            return isLeftEdge || isTopEdge;
-        };
-
-        // // Adjust edge x-coords according to "top-left" rule.
-        // T x_start_left_edge = v1->x;
-        // if (dy_top_middle == static_cast<T>(0.0)) {
-        //     // v1-v2 is top edge and v1-v3 is left edge.
-        //     v1->x += std::numeric_limits<T>::min();
-        //     v3->x += std::numeric_limits<T>::min();
-        // }
-        // else {
-        //     if (dx_middle_bottom > static_cast<T>(0.0)) {
-        //         // v1-v2 is left edge.
-        //         v1->x += std::numeric_limits<T>::min();
-        //         v2->x += std::numeric_limits<T>::min();
-        //         if (dy_middle_bottom > static_cast<T>(0.0)) {
-        //             // v2-v3 is left edge.
-        //             v1->x += std::numeric_limits<T>::min();
-        //         }
-        //     }
-        //     else {
-        //         // v1-v3 is left edge.
-        //     }
-        // }
-
         // Lambda for rasterizing half a triangle.
         auto rasterizeHalfTriangle = [&rasterization, &triangle, this](int16 y_start) {
             const int32 clipped_y_start = std::max(static_cast<int32>(y_start), static_cast<int32>(0));
@@ -508,8 +454,8 @@ namespace MicroRenderer {
                 rasterization.left_x += rasterization.left_dx_per_dy;
                 rasterization.right_x += rasterization.right_dx_per_dy;
             }
-            const int32 clipped_y_end = std::min(static_cast<int32>(rasterization.y_halftri_end), framebuffer.getHeight());
-            for (int32 y = clipped_y_start; y < clipped_y_end; ++y) {
+            const int32 clipped_y_end = std::min(static_cast<int32>(rasterization.y_halftri_end), framebuffer.getHeight() - 1);
+            for (int32 y = clipped_y_start; y <= clipped_y_end; ++y) {
                 // Compute start and end of line.
                 const int32 x_start = std::max(static_cast<int32>(std::ceil(rasterization.left_x)), static_cast<int32>(0));
                 const int32 x_stop = std::min(static_cast<int32>(std::floor(rasterization.right_x)), framebuffer.getWidth() - 1);
@@ -531,7 +477,7 @@ namespace MicroRenderer {
             }
         };
 
-        // Lambda for adjusting rasterization data for lower triangle and signaling triangle end.
+        // Lambda for adjusting rasterization data for second half triangle and for signaling triangle end.
         auto updateRasterization = [&rasterization]() -> bool
         {
             if (rasterization.y_halftri_end == rasterization.y_fulltri_end)
@@ -552,7 +498,7 @@ namespace MicroRenderer {
 
         // Rasterize first half triangle.
         rasterizeHalfTriangle(first_scanline_y);
-        const int16 next_y_start = rasterization.y_halftri_end;
+        const int16 next_y_start = rasterization.y_halftri_end + 1;
 
         // Update rasterization data for lower half triangle.
         if (!updateRasterization())

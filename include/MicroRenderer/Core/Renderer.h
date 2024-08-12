@@ -84,11 +84,10 @@ public:
 
     bool setupTriangleRasterization(const Vector3<T>& v1_screen_pos, const Vector3<T>& v2_screen_pos,
                                     const Vector3<T>& v3_screen_pos, RasterizationData<T>& rasterization,
-                                    int16& y_start);
+                                    int16& start_scanline);
 
     void rasterizeAndShadeTriangle(RasterizationData<T>& rasterization, const TriangleData& triangle,
                                    int16 first_scanline_y);
-
 
 private:
 

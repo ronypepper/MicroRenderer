@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     UVCInstanceData<float> cube_instance = {transform};
 
     // Triangle test model.
-    constexpr uint32 tritest_vertex_num = 48;
+    constexpr uint32 tritest_vertex_num = 72;
     UVCVertexSource<float> tritest_vertex_source[tritest_vertex_num] = {
         {{100.f, 50.f, 0.5f}, {0.f, 1.f, 0.f}},
         {{50.f, -50.f, 0.5f}, {0.f, 0.f, 1.f}},
@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
         {{100.f, 325.f, 0.5f}, {0.f, 0.f, 1.f}},
         {{100.f, 300.f, 0.5f}, {0.f, 1.f, 0.f}},
         {{75.f, 300.f, 0.5f}, {0.f, 1.f, 1.f}},
+
         {{100.f, 300.f, 0.5f}, {0.f, 1.f, 0.f}},
         {{100.f, 325.f, 0.5f}, {0.f, 0.f, 1.f}},
         {{125.f, 300.f, 0.5f}, {0.f, 1.f, 1.f}},
@@ -112,11 +113,39 @@ int main(int argc, char *argv[])
         {{100.f, 425.f, 0.5f}, {0.f, 0.f, 1.f}},
         {{125.f, 400.f, 0.5f}, {0.f, 1.f, 1.f}},
 
-{{100.f, 425.f, 0.5f}, {0.f, 0.f, 1.f}},
+        {{100.f, 425.f, 0.5f}, {0.f, 0.f, 1.f}},
         {{100.f, 400.f, 0.5f}, {0.f, 1.f, 0.f}},
-        {{75.f, 400.f, 0.5f}, {0.f, 1.f, 1.f}}
+        {{75.f, 400.f, 0.5f}, {0.f, 1.f, 1.f}},
+
+        {{50.f, 500.f, 0.5f}, {0.f, 1.f, 0.f}},
+        {{50.f, 525.f, 0.5f}, {0.f, 0.f, 1.f}},
+        {{75.f, 500.f, 0.5f}, {0.f, 1.f, 1.f}},
+{{75.f, 500.f, 0.5f}, {0.f, 1.f, 0.f}},
+        {{50.f, 525.f, 0.5f}, {0.f, 0.f, 1.f}},
+        {{75.f, 525.f, 0.5f}, {0.f, 1.f, 1.f}},
+
+{{175.f, 500.f, 0.5f}, {0.f, 1.f, 0.f}},
+{{150.f, 525.f, 0.5f}, {0.f, 0.f, 1.f}},
+{{175.f, 525.f, 0.5f}, {0.f, 1.f, 1.f}},
+{{150.f, 500.f, 0.5f}, {0.f, 1.f, 0.f}},
+{{150.f, 525.f, 0.5f}, {0.f, 0.f, 1.f}},
+{{175.f, 500.f, 0.5f}, {0.f, 1.f, 1.f}},
+
+{{50.f, 625.f, 0.5f}, {0.f, 0.f, 1.f}},
+{{25.f, 600.f, 0.5f}, {0.f, 1.f, 0.f}},
+{{25.f, 625.f, 0.5f}, {0.f, 1.f, 1.f}},
+{{50.f, 625.f, 0.5f}, {0.f, 0.f, 1.f}},
+{{50.f, 600.f, 0.5f}, {0.f, 1.f, 0.f}},
+{{25.f, 600.f, 0.5f}, {0.f, 1.f, 1.f}},
+
+{{150.f, 625.f, 0.5f}, {0.f, 0.f, 1.f}},
+{{150.f, 600.f, 0.5f}, {0.f, 1.f, 0.f}},
+{{125.f, 600.f, 0.5f}, {0.f, 1.f, 1.f}},
+{{150.f, 625.f, 0.5f}, {0.f, 0.f, 1.f}},
+{{125.f, 600.f, 0.5f}, {0.f, 1.f, 0.f}},
+{{125.f, 625.f, 0.5f}, {0.f, 1.f, 1.f}}
     };
-    constexpr uint32 tritest_triangle_num = 16;
+    constexpr uint32 tritest_triangle_num = 24;
     UVCTriangleSource<float> tritest_triangle_source[tritest_triangle_num] = {
         {{1.f, 0.f, 0.f}},
         {{0.f, 1.f, 0.f}},
@@ -134,11 +163,22 @@ int main(int argc, char *argv[])
         {{0.f, 0.f, 1.f}},
         {{0.f, 0.f, 1.f}},
         {{1.f, 0.f, 0.f}},
+{{1.f, 0.f, 0.f}},
+{{0.f, 0.f, 1.f}},
+{{0.f, 0.f, 1.f}},
+{{1.f, 0.f, 0.f}},
+
+{{1.f, 0.f, 0.f}},
+{{0.f, 0.f, 1.f}},
+{{0.f, 0.f, 1.f}},
+{{1.f, 0.f, 0.f}}
     };
-    TriangleIndices tritest_indices[tritest_triangle_num] = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47
-    };
+    TriangleIndices tritest_indices[tritest_triangle_num] = {};
+    for (uint32 i = 0; i < tritest_triangle_num; ++i) {
+        tritest_indices[i].vertex_1_idx = static_cast<uint16>(3 * i);
+        tritest_indices[i].vertex_2_idx = static_cast<uint16>(3 * i + 1);
+        tritest_indices[i].vertex_3_idx = static_cast<uint16>(3 * i + 2);
+    }
     UVCShaderInterface<float>::ModelData tritest_model = {
         tritest_vertex_num, tritest_triangle_num, tritest_vertex_source, tritest_triangle_source, tritest_indices
     };
