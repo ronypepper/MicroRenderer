@@ -19,14 +19,12 @@ public:
         // auto instance = uniform.instance;
         // auto source = vertex.source;
         // auto buffer = vertex.buffer;
-        vertex.buffer->screen_position = (uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)}).getXYZ();
+        //vertex.buffer->screen_position = (uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)}).getXYZ();
+        vertex.buffer->clip_position = uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)};
     }
     static const Vector4<T>& getHomogenousSpacePosition_implementation(const VertexData vertex)
     {
-        // Required (only) by PERSPECTIVE projection.
-        // Implement here.
-        static const Vector4<T> temp;
-        return temp;
+        return vertex.buffer->clip_position;
     }
     static const Vector3<T>& getScreenSpacePosition_implementation(const VertexData vertex)
     {
@@ -34,8 +32,7 @@ public:
     }
     static void setHomogenousSpacePosition_implementation(VertexBuffer* const buffer, const Vector4<T>& position)
     {
-        // May be implemented (only) with PERSPECTIVE projection if interpolated homogenous coordinates are desired.
-        // Implement here.
+        buffer->clip_position = position;
     }
     static void setScreenSpacePosition_implementation(VertexBuffer* const buffer, const Vector3<T>& position)
     {

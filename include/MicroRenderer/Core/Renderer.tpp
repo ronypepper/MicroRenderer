@@ -36,6 +36,18 @@ namespace MicroRenderer {
     }
 
     template <typename CfgType, CfgType Config>
+    void Renderer<CfgType, Config>::setFrontFace(FrontFaceMode front_face)
+    {
+        front_face_mode = front_face;
+    }
+
+    template <typename CfgType, CfgType Config>
+    typename Renderer<CfgType, Config>::ShaderProgram& Renderer<CfgType, Config>::getShaderProgram()
+    {
+        return shader_program;
+    }
+
+    template <typename CfgType, CfgType Config>
     void Renderer<CfgType, Config>::setRenderInstances(uint16 number, const ModelData* const* models,
                                                        const InstanceData* const* instances)
     {
@@ -157,7 +169,9 @@ namespace MicroRenderer {
         RasterizationData<T> rasterization;
         int16 y_start = -1;
         if (setupTriangleRasterization({a, 0}, {b, 0}, {c, 0}, rasterization, y_start)) {
-            rasterizeAndShadeTriangle(rasterization, {}, y_start);
+            TriangleSource tri_source = {{1.f}};
+            TriangleData triangle = {&tri_source, nullptr};
+            rasterizeAndShadeTriangle(rasterization, triangle, y_start);
         }
     }
 
@@ -189,17 +203,17 @@ namespace MicroRenderer {
                 // Shade vertex.
                 shader_program.shadeVertex(vertex_data);
 
-                // Homogenize vertex.
-                if constexpr(ShaderProgram::getProjectionType() == PERSPECTIVE) {
-                    Vector4<T>& homogenous_pos = shader_program.getHomogenousSpacePosition(vertex_data);
-                    if (homogenous_pos.w >= shader_program.getNearPlane()) {
-                        homogenous_pos.w = static_cast<T>(1.0) / homogenous_pos.w;
-                        Vector3<T>& screen_pos = shader_program.getScreenSpacePosition(vertex_data);
-                        screen_pos.x = homogenous_pos.x * homogenous_pos.w;
-                        screen_pos.y = homogenous_pos.y * homogenous_pos.w;
-                        screen_pos.z = homogenous_pos.z * homogenous_pos.w;
-                    }
-                }
+                // // Homogenize vertex.
+                // if constexpr(ShaderProgram::getProjectionType() == PERSPECTIVE) {
+                //     Vector4<T>& homogenous_pos = shader_program.getHomogenousSpacePosition(vertex_data);
+                //     if (homogenous_pos.w >= shader_program.getNearPlane()) {
+                //         homogenous_pos.w = static_cast<T>(1.0) / homogenous_pos.w;
+                //         Vector3<T>& screen_pos = shader_program.getScreenSpacePosition(vertex_data);
+                //         screen_pos.x = homogenous_pos.x * homogenous_pos.w;
+                //         screen_pos.y = homogenous_pos.y * homogenous_pos.w;
+                //         screen_pos.z = homogenous_pos.z * homogenous_pos.w;
+                //     }
+                // }
             }
 
             // Triangle processing.
@@ -239,9 +253,9 @@ namespace MicroRenderer {
                 const T v1_clip_depth = is_persp ? shader_program.getHomogenousSpacePosition(vertices[0]).z : v1_screen_pos.z;
                 const T v2_clip_depth = is_persp ? shader_program.getHomogenousSpacePosition(vertices[1]).z : v2_screen_pos.z;
                 const T v3_clip_depth = is_persp ? shader_program.getHomogenousSpacePosition(vertices[2]).z : v3_screen_pos.z;
-                const uint8 v1_z_visible = v1_clip_depth > static_cast<T>(0.0);
-                const uint8 v2_z_visible = v2_clip_depth > static_cast<T>(0.0);
-                const uint8 v3_z_visible = v3_clip_depth > static_cast<T>(0.0);
+                const uint8 v1_z_visible = v1_clip_depth >= static_cast<T>(0.0);
+                const uint8 v2_z_visible = v2_clip_depth >= static_cast<T>(0.0);
+                const uint8 v3_z_visible = v3_clip_depth >= static_cast<T>(0.0);
                 const uint8 num_visible_verts = v1_z_visible + v2_z_visible + v3_z_visible;
                 if (num_visible_verts) {
                     // Triangle is at least partially visible. Rasterize/shade accordingly.
@@ -321,14 +335,23 @@ namespace MicroRenderer {
                                                                const Vector3<T>& v3_screen_pos,
                                                                RasterizationData<T>& rasterization, int16& start_scanline)
     {
-        const Vector3<T>* positions[3] = {&v1_screen_pos, &v2_screen_pos, &v3_screen_pos};
+        const Vector3<T>* positions[3];
+        positions[0] = &v1_screen_pos;
+        if (front_face_mode == COUNTERCLOCKWISE) {
+            positions[1] = &v2_screen_pos;
+            positions[2] = &v3_screen_pos;
+        }
+        else {
+            positions[1] = &v3_screen_pos;
+            positions[2] = &v2_screen_pos;
+        }
 
         // Backface culling and degenerate check.
-        const Vector2<T> v1_to_v2 = {v2_screen_pos.x - v1_screen_pos.x, v2_screen_pos.y - v1_screen_pos.y};
-        const Vector2<T> v1_to_v3 = {v3_screen_pos.x - v1_screen_pos.x, v3_screen_pos.y - v1_screen_pos.y};
+        const Vector2<T> v1_to_v2 = {positions[1]->x - positions[0]->x, positions[1]->y - positions[0]->y};
+        const Vector2<T> v1_to_v3 = {positions[2]->x - positions[0]->x, positions[2]->y - positions[0]->y};
         constexpr T DEGENERATE_THRESHOLD = static_cast<T>(0.001);
-        const T area = v1_to_v2.x * v1_to_v3.y - v1_to_v2.y * v1_to_v3.x;
-        if (area > DEGENERATE_THRESHOLD)
+        const T area = v1_to_v2.x * v1_to_v3.y - v1_to_v2.y * v1_to_v3.x; // Clockwise vertex order yields negative area.
+        if (area < DEGENERATE_THRESHOLD)
             return false;
 
         // Sort vertices in y, starting with smallest y.
@@ -348,22 +371,23 @@ namespace MicroRenderer {
         // Check half-triangle size along y and draw only those that are thick enough to avoid zero-divisions.
         const T dy_start_middle = positions[middle_idx]->y - positions[start_idx]->y;
         const T dy_middle_end = positions[end_idx]->y - positions[middle_idx]->y;
-        constexpr T MIN_DELTA_Y = static_cast<T>(0.001);
+        constexpr T MIN_DELTA_Y = static_cast<T>(0.001); //std::numeric_limits<T>::min();
         if (dy_start_middle < MIN_DELTA_Y && dy_middle_end < MIN_DELTA_Y) {
             // Both half-triangles are too lean in y. Do not draw anything.
             return false;
         }
 
         // Shift left and flat-top edges by a small amount to deterministically draw edges going exactly through pixels.
-        constexpr T TOPLEFT_EDGE_SHIFT = static_cast<T>(0.001);
+        // This is called the "top left" fill rule.
+        constexpr T TOPLEFT_EDGE_SHIFT = static_cast<T>(0.00001);
 
         uint8 peak_idx, left_idx, right_idx;
         T y_start;
         if (dy_start_middle < MIN_DELTA_Y) {
             // First half-triangle is too lean in y. Only draw second half-triangle.
             peak_idx = end_idx;
-            right_idx = peak_idx == 2 ? 0 : peak_idx + 1;
-            left_idx = right_idx == 2 ? 0 : right_idx + 1;
+            left_idx = peak_idx == 2 ? 0 : peak_idx + 1;
+            right_idx = left_idx == 2 ? 0 : left_idx + 1;
 
             /// Compute edge start x-coordinates and depth at left edge.
             rasterization.left_x = positions[left_idx]->x + TOPLEFT_EDGE_SHIFT; // Shift left edge slightly.
@@ -379,8 +403,8 @@ namespace MicroRenderer {
         else {
             // At least the first half-triangle is drawn.
             peak_idx = start_idx;
-            left_idx = peak_idx == 2 ? 0 : peak_idx + 1;
-            right_idx = left_idx == 2 ? 0 : left_idx + 1;
+            right_idx = peak_idx == 2 ? 0 : peak_idx + 1;
+            left_idx = right_idx == 2 ? 0 : right_idx + 1;
 
             // Compute edge start x-coordinates and depth at left edge.
             rasterization.left_x = positions[peak_idx]->x + TOPLEFT_EDGE_SHIFT; // Shift left edge slightly.
@@ -389,7 +413,7 @@ namespace MicroRenderer {
 
             // Compute (half-)triangle start and end y-coordinates.
             y_start = positions[peak_idx]->y;
-            if (dy_start_middle < MIN_DELTA_Y) {
+            if (dy_middle_end < MIN_DELTA_Y) {
                 // Second half-triangle is too lean in y. Only draw first half-triangle.
                 const T y_end = std::min(positions[left_idx]->y, positions[right_idx]->y);
                 rasterization.y_halftri_end = std::floor(y_end);
@@ -404,10 +428,14 @@ namespace MicroRenderer {
 
                 // Compute second half-triangle changed edge slope and x-start coordinate.
                 rasterization.last_dx_per_dy = (positions[end_idx]->x - positions[middle_idx]->x) / (positions[end_idx]->y - positions[middle_idx]->y);
-                const T middle_offset = rasterization.y_halftri_end - y_middle;
+                const T middle_offset = rasterization.y_halftri_end + static_cast<T>(1.0) - y_middle;
                 rasterization.last_x = positions[middle_idx]->x + rasterization.last_dx_per_dy * middle_offset;
                 if (middle_idx == left_idx) {
                     rasterization.last_x += TOPLEFT_EDGE_SHIFT; // Shift left edge slightly.
+                    rasterization.last_is_left = true;
+                }
+                else {
+                    rasterization.last_is_left = false;
                 }
             }
         }
@@ -483,7 +511,7 @@ namespace MicroRenderer {
             if (rasterization.y_halftri_end == rasterization.y_fulltri_end)
                 return false;
             rasterization.y_halftri_end = rasterization.y_fulltri_end;
-            if (rasterization.last_dx_per_dy > static_cast<T>(0.0)) {
+            if (rasterization.last_is_left) {
                 // Left is middle.
                 rasterization.left_x = rasterization.last_x;
                 rasterization.left_dx_per_dy = rasterization.last_dx_per_dy;

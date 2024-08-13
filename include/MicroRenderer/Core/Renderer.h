@@ -14,6 +14,7 @@ namespace MicroRenderer {
 template<typename T>
 struct RasterizationData
 {
+    bool last_is_left;
     uint16 instance_idx;
     //uint16 triangle_idx;
     int16 y_halftri_end;
@@ -33,6 +34,12 @@ struct RasterizationOrder
 {
     int16 scanline_y;
     uint16 rasterization_idx;
+};
+
+enum FrontFaceMode
+{
+    COUNTERCLOCKWISE,
+    CLOCKWISE
 };
 
 template<typename T, class ShaderProgram>
@@ -60,6 +67,10 @@ public:
     void setDepthbuffer(float* address);
 
     float* getDepthbuffer() const;
+
+    void setFrontFace(FrontFaceMode front_face);
+
+    ShaderProgram& getShaderProgram();
 
     void setRenderInstances(uint16 number, const ModelData* const* models, const InstanceData* const* instances);
 
@@ -95,6 +106,10 @@ private:
 
     float* depthbuffer = nullptr;
 
+    FrontFaceMode front_face_mode = COUNTERCLOCKWISE;
+
+    ShaderProgram shader_program;
+
     uint16 num_instances = 0;
 
     const ModelData* const* instance_models = nullptr;
@@ -116,8 +131,6 @@ private:
     uint16 order_buffer_actives_begin = 0;
 
     uint16 order_buffer_actives_end = 0;
-
-    ShaderProgram shader_program;
 };
 
 } // namespace MicroRenderer

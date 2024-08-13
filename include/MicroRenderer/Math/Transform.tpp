@@ -52,7 +52,7 @@ Matrix4<T> Transform::scale(const Vector3<T> &scale) {
 
 template<typename T>
 Matrix4<T> Transform::camera(const Vector3<T> &eye, const Vector3<T> &view_direction, const Vector3<T> &view_up) {
-    const Vector3<T> w = -view_direction.getNormalized();
+    const Vector3<T> w = view_direction.getNormalized();
     const Vector3<T> u = view_up.cross(w).getNormalized();
     const Vector3<T> v = w.cross(u);
     return Matrix4<T>{
@@ -64,7 +64,7 @@ Matrix4<T> Transform::camera(const Vector3<T> &eye, const Vector3<T> &view_direc
 }
 
 template<typename T>
-Matrix4<T> Transform::orthogonalProjection(T left, T right, T bottom, T top, T near, T far) {
+Matrix4<T> Transform::orthographicProjection(T left, T right, T bottom, T top, T near, T far) {
     // return Matrix4<T>{
     //     2 / (right - left), 0, 0, 0,
     //     0, 2 / (top - bottom), 0, 0,
@@ -96,17 +96,11 @@ Matrix4<T> Transform::viewport(uint32 viewport_width, uint32 viewport_height, bo
     const T cast_height = static_cast<T>(viewport_height);
     const T factor_x = mirror_x ? static_cast<T>(-0.5) : static_cast<T>(0.5);
     const T factor_y = mirror_y ? static_cast<T>(-0.5) : static_cast<T>(0.5);
-    // return Matrix4<T>{
-    //     cast_width * factor_x, 0, 0, 0,
-    //     0, cast_height * factor_y, 0, 0,
-    //     0, 0, 1, 0,
-    //     (cast_width - 1) * static_cast<T>(0.5), (cast_height - 1) * static_cast<T>(0.5), 0, 1
-    // };
     return Matrix4<T>{
-        cast_width, 0, 0, 0,
-        0, cast_height, 0, 0,
+        cast_width * factor_x, 0, 0, 0,
+        0, cast_height * factor_y, 0, 0,
         0, 0, 1, 0,
-        cast_width + static_cast<T>(-0.5), static_cast<T>(-0.5), 0, 1
+        (cast_width - static_cast<T>(1.0)) * static_cast<T>(0.5), (cast_height - static_cast<T>(1.0)) * static_cast<T>(0.5), 0, 1
     };
 }
 

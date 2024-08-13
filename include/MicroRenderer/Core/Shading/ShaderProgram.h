@@ -42,6 +42,7 @@ public:
     void setNearPlane(T distance)
     {
         near_plane = distance;
+        inv_near_plane = static_cast<T>(1.0) / distance;
     }
     T getNearPlane() const
     {

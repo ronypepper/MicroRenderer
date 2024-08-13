@@ -27,13 +27,13 @@ public:
     static Matrix4<T> camera(const Vector3<T>& eye, const Vector3<T>& view_direction, const Vector3<T>& view_up);
 
     template<typename T>
-    static Matrix4<T> orthogonalProjection(T left, T right, T bottom, T top, T near, T far);
+    static Matrix4<T> orthographicProjection(T left, T right, T bottom, T top, T near, T far);
 
     template<typename T>
     static Matrix4<T> perspectiveProjection(T vertical_fov, T aspect_ratio, T near, T far);
 
     template<typename T>
-    static Matrix4<T> viewport(uint32 viewport_width, uint32 viewport_height, bool mirror_x = false, bool mirror_y = true);
+    static Matrix4<T> viewport(uint32 viewport_width, uint32 viewport_height, bool mirror_x = false, bool mirror_y = false);
 };
 
 } // namespace MicroRenderer
