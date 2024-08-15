@@ -30,6 +30,9 @@ public:
     static Matrix4<T> orthographicProjection(T left, T right, T bottom, T top, T near, T far);
 
     template<typename T>
+    static Matrix4<T> perspectiveProjection(T left, T right, T bottom, T top, T near, T far);
+
+    template<typename T>
     static Matrix4<T> perspectiveProjection(T vertical_fov, T aspect_ratio, T near, T far);
 
     template<typename T>

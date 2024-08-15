@@ -4,17 +4,17 @@
 
 #pragma once
 #include "CustomFragmentShader.h"
-#include "CustomShaderInterface.h"
 #include "CustomTriangleAssembler.h"
 #include "CustomVertexShader.h"
 #include "MicroRenderer/Core/Shading/ShaderProgram.h"
 
 namespace MicroRenderer {
 
-template<typename T>
-using CustomOrthoShaderProgram = BaseShaderProgram<T, ORTHOGRAPHIC, CustomShaderInterface<T>, CustomVertexShader<T>, CustomTriangleAssembler<T>, CustomFragmentShader<T>>;
+constexpr ShaderProgramConfig costum_shader_program_config = {
+    ORTHOGRAPHIC, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED
+};
 
 template<typename T>
-using CustomPerspShaderProgram = BaseShaderProgram<T, PERSPECTIVE, CustomShaderInterface<T>, CustomVertexShader<T>, CustomTriangleAssembler<T>, CustomFragmentShader<T>>;
+using CustomShaderProgram = BaseShaderProgram<T, costum_shader_program_config, CustomVertexShader, CustomTriangleAssembler, CustomFragmentShader>;
 
 } // namespace MicroRenderer

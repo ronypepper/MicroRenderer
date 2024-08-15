@@ -3,11 +3,12 @@
 //
 
 #pragma once
-#include "Framebuffer.h"
+#include <variant>
+#include "MicroRenderer/Core/Textures/Texture2D.h"
 #include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Math/Vector2.h"
 #include "MicroRenderer/Math/Vector3.h"
-#include "MicroRenderer/Core/Shading/ShaderInterface.h"
+#include "MicroRenderer/Core/Shading/ShaderProgram.h"
 
 namespace MicroRenderer {
 
@@ -25,9 +26,6 @@ struct RasterizationData
     T left_x;
     T right_x;
     T last_x;
-    T diz_per_dx;
-    T diz_per_dy;
-    T left_inverse_z;
 };
 
 struct RasterizationOrder
@@ -42,83 +40,14 @@ enum FrontFaceMode
     CLOCKWISE
 };
 
-template<typename T, class ShaderProgram>
-struct RendererConfig {
-    using value_type = T;
-    using shader_program = ShaderProgram;
-    ColorCoding color_coding = RGB888;
-};
-
-template<typename CfgType, CfgType Config>
-class Renderer {
-public:
-    using T = typename CfgType::value_type;
-    using ShaderProgram = typename CfgType::shader_program;
-    using RendererFramebuffer = Framebuffer<T, Config.color_coding>;
-
-    USE_SHADER_INTERFACE_TYPES(ShaderProgram::ShaderInterface_type)
-
-    Renderer(uint32 width, uint32 height, uint8* frame_buffer);
-
-    void setFramebuffer(uint8* address);
-
-    RendererFramebuffer& getFramebuffer();
-
-    void setDepthbuffer(float* address);
-
-    float* getDepthbuffer() const;
-
-    void setFrontFace(FrontFaceMode front_face);
-
-    ShaderProgram& getShaderProgram();
-
-    void setRenderInstances(uint16 number, const ModelData* const* models, const InstanceData* const* instances);
-
-    void setShadingBuffers(VertexBuffer* vertex, TriangleBuffer* triangle);
-
-    void setRasterizationBuffers(RasterizationData<T>* data, RasterizationOrder* order);
-
-    void rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
-
-    void rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
-
-    void rasterizeTriangle(const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c);
-
-    void renderFramebuffer();
-
-    void renderScanlines();
-
-    void renderScanbuckets(int16 scanlines_per_bucket);
-
-    bool setupTriangleRasterization(const VertexData& vertex_1, const VertexData& vertex_2, const VertexData& vertex_3,
-                                    RasterizationData<T>& rasterization, int16& y_start);
-
-    bool setupTriangleRasterization(const Vector3<T>& v1_screen_pos, const Vector3<T>& v2_screen_pos,
-                                    const Vector3<T>& v3_screen_pos, RasterizationData<T>& rasterization,
-                                    int16& start_scanline);
-
-    void rasterizeAndShadeTriangle(RasterizationData<T>& rasterization, const TriangleData& triangle,
-                                   int16 first_scanline_y);
-
-private:
-
-    RendererFramebuffer framebuffer;
-
-    float* depthbuffer = nullptr;
-
-    FrontFaceMode front_face_mode = COUNTERCLOCKWISE;
-
-    ShaderProgram shader_program;
-
-    uint16 num_instances = 0;
-
-    const ModelData* const* instance_models = nullptr;
-
-    const InstanceData* const* instance_datas = nullptr;
-
+template<typename T, typename TriangleBuffer>
+struct ScanlineRenderData
+{
     uint16 num_rasterization_candidates = 0;
 
     RasterizationData<T>* rasterization_data_buffer = nullptr;
+
+    VertexSource* vertex
 
     VertexBuffer* vertex_buffers = nullptr;
 
@@ -131,6 +60,92 @@ private:
     uint16 order_buffer_actives_begin = 0;
 
     uint16 order_buffer_actives_end = 0;
+};
+    
+template<typename T, template <typename> class ShaderProgram>
+class Renderer {
+    USE_SHADER_INTERFACE(ShaderProgram<T>::ShaderInterface);
+    static constexpr TextureConfig framebuffer_config = {
+        ACCESS_READWRITE, ShaderInterface::shader_output.format, SWIZZLE_NONE, ShaderInterface::shader_output.type,
+        WRAPMODE_NONE
+    };
+    static constexpr TextureConfig depthbuffer_config = {
+        ACCESS_READWRITE, FORMAT_DEPTH, SWIZZLE_NONE, TYPE_DECIMAL, WRAPMODE_NONE
+    };
+public:
+    static constexpr ShaderProgramConfig shader_config = ShaderProgram<T>::configuration;
+    using Framebuffer = std::conditional_t<shader_config.shading == SHADING_ENABLED, Texture2D<T, framebuffer_config>, std::monostate>;
+    using Depthbuffer = std::conditional_t<shader_config.depth_test == DEPTH_TEST_ENABLED, Texture2D<T, depthbuffer_config>, std::monostate>;
+    using NearPlaneType = std::conditional_t<shader_config.projection == PERSPECTIVE, T, std::monostate>;
+
+    Renderer() = default;
+
+    void setFramebuffer(void* address, uint32 width, uint32 height) requires(shader_config.shading == SHADING_ENABLED);
+
+    Framebuffer& getFramebuffer() requires(shader_config.shading == SHADING_ENABLED);
+
+    void setDepthbuffer(void* address, uint32 width, uint32 height) requires(shader_config.depth_test == DEPTH_TEST_ENABLED);
+
+    Depthbuffer& getDepthbuffer() requires(shader_config.depth_test == DEPTH_TEST_ENABLED);
+
+    void setFrontFace(FrontFaceMode front_face);
+
+    void setNearPlane(T distance) requires(shader_config.projection == PERSPECTIVE);
+
+    ShaderProgram<T>& getShaderProgram();
+
+    void setRenderInstances(uint16 number, const ModelData* const* models, const InstanceData* const* instances);
+
+    void setShadingBuffers(VertexBuffer* vertex, TriangleBuffer* triangle);
+
+    void setRasterizationBuffers(RasterizationData<T>* data, RasterizationOrder* order);
+
+    void rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
+
+    void rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
+
+    void rasterizeTriangle(const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c);
+    
+    void renderFramebuffer();
+
+    void renderScanlines();
+
+    void renderScanbuckets(int16 scanlines_per_bucket);
+
+    void processVertices(const ModelData* model);
+
+    bool setupTriangleRasterization(const VertexData& vertex_1, const VertexData& vertex_2, const VertexData& vertex_3,
+                                    RasterizationData<T>& rasterization, int16& y_start);
+
+    bool setupTriangleRasterization(const Vector3<T>& v1_screen_pos, const Vector3<T>& v2_screen_pos,
+                                    const Vector3<T>& v3_screen_pos, RasterizationData<T>& rasterization,
+                                    int16& start_scanline);
+
+    void rasterizeAndShadeTriangle(RasterizationData<T>& rasterization, const TriangleData& triangle, VertexData vertex, int16 first_scanline_y);
+
+private:
+
+    Framebuffer framebuffer;
+
+    Depthbuffer depthbuffer;
+
+    FrontFaceMode front_face_mode = COUNTERCLOCKWISE;
+
+    NearPlaneType near_plane;
+
+    ShaderProgram<T> shader_program;
+
+    uint16 num_instances = 0;
+
+    const ModelData* const* instance_models = nullptr;
+
+    const InstanceData* const* instance_datas = nullptr;
+
+
+
+
+
+
 };
 
 } // namespace MicroRenderer

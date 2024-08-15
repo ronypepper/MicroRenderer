@@ -5,20 +5,41 @@
 #pragma once
 #include "MicroRenderer/Math/Vector3.h"
 #include "MicroRenderer/Math/Vector4.h"
+#include "MicroRenderer/Core/Textures/Texture2D.h"
+#include "MicroRenderer/Math/Interpolation.h"
 
 namespace MicroRenderer {
 
 template<typename T>
-struct BaseOrthoVertexBuffer
+struct BaseOrthographicVertexBuffer
 {
     Vector3<T> screen_position;
 };
 
 template<typename T>
-struct BasePerspVertexBuffer
+struct BasePerspectiveVertexBuffer
 {
     Vector4<T> clip_position;
     Vector3<T> screen_position;
+
+};
+
+template<typename T>
+struct BaseDepthTriangleBuffer
+{
+    AttributeIncrements<T> inverse_depth_incs;
+};
+
+template<typename T>
+struct BaseDepthFragment
+{
+    T inverse_depth;
+};
+
+struct ShaderOutput
+{
+    TextureInternalFormat format;
+    TextureExternalType type;
 };
 
 struct TriangleIndices
@@ -28,42 +49,56 @@ struct TriangleIndices
     uint16 vertex_3_idx;
 };
 
-template<class GlobalData, class InstanceData, class VertexSource, class VertexBuffer, class TriangleSource, class TriangleBuffer>
+template <typename T, ShaderOutput output, template <typename> class GlobalData, template <typename> class InstanceData,
+          template <typename> class VertexSource, template <typename> class VertexBuffer, template <typename> class
+          TriangleSource, template <typename> class TriangleBuffer, template <typename> class Fragment>
 class BaseShaderInterface
 {
+    // Deduce return type of fragment shader's computeColor method. ShaderOutput becomes equal to a Texture2D's
+    // ExternalType with same TextureInternalFormat and TextureExternalType configuration.
+    using ExternalValue = typename TextureExternal<output.type>::type;
+    using ExternalType = typename TextureInternal<output.format, T>::template PixelType<ExternalValue>;
 public:
-    using GlobalData_type = GlobalData;
-    using InstanceData_type = InstanceData;
-    using VertexSource_type = VertexSource;
-    using VertexBuffer_type = VertexBuffer;
-    using TriangleSource_type = TriangleSource;
-    using TriangleBuffer_type = TriangleBuffer;
+    static constexpr ShaderOutput shader_output = output;
+
+    using Value_type = T;
+    using ShaderOutput_type = ExternalType;
+    using GlobalData_type = GlobalData<T>;
+    using InstanceData_type = InstanceData<T>;
+    using VertexSource_type = VertexSource<T>;
+    using VertexBuffer_type = VertexBuffer<T>;
+    using TriangleSource_type = TriangleSource<T>;
+    using TriangleBuffer_type = TriangleBuffer<T>;
+    using Fragment_type = Fragment<T>;
+
     struct UniformData
     {
-        const GlobalData* global;
-        const InstanceData* instance;
+        const GlobalData<T>* global;
+        const InstanceData<T>* instance;
     };
     struct VertexData
     {
-        const VertexSource* source;
-        VertexBuffer* buffer;
+        const VertexSource<T>* source;
+        VertexBuffer<T>* buffer;
     };
     struct TriangleData
     {
-        const TriangleSource* source;
-        TriangleBuffer* buffer;
+        const TriangleSource<T>* source;
+        TriangleBuffer<T>* buffer;
     };
     struct ModelData
     {
         uint16 num_vertices;
         uint16 num_triangles;
-        VertexSource* vertices;
-        TriangleSource* triangles;
-        TriangleIndices* indices;
+        const VertexSource<T>* vertices;
+        const TriangleSource<T>* triangles;
+        const TriangleIndices* indices;
     };
 };
 
-#define USE_SHADER_INTERFACE_TYPES(Interface) \
+#define USE_SHADER_INTERFACE(Interface) \
+    using ShaderInterface = Interface; \
+    using ShaderOutput = typename Interface::ShaderOutput_type; \
     using GlobalData = typename Interface::GlobalData_type; \
     using InstanceData = typename Interface::InstanceData_type; \
     using UniformData = typename Interface::UniformData; \
@@ -72,6 +107,7 @@ public:
     using VertexData = typename Interface::VertexData; \
     using TriangleSource = typename Interface::TriangleSource_type; \
     using TriangleBuffer = typename Interface::TriangleBuffer_type; \
+    using Fragment = typename Interface::Fragment_type; \
     using TriangleData = typename Interface::TriangleData; \
     using ModelData = typename Interface::ModelData;
 

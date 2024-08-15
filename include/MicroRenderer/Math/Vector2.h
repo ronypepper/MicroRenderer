@@ -11,6 +11,8 @@ namespace MicroRenderer {
 template<typename T>
 class Vector2 {
 public:
+    static_assert(std::is_arithmetic_v<T>, "Template type of Vector2<T> must be arithmetic!");
+
     // Component values.
     union {
         T components[2];
@@ -33,17 +35,24 @@ public:
 
     // Constructors.
     Vector2() {}
-    Vector2(T value) {
+    constexpr Vector2(T value) {
         x = value;
         y = value;
     }
-    Vector2(T x, T y) {
+    constexpr Vector2(T x, T y) {
         this->x = x;
         this->y = y;
     }
-    Vector2(const Vector2& other) {
+    constexpr Vector2(const Vector2& other) {
         x = other.x;
         y = other.y;
+    }
+
+    // Conversion operator.
+    template<typename U>
+    explicit constexpr operator Vector2<U>()
+    {
+        return {static_cast<U>(x), static_cast<U>(y)};
     }
 
     // Assignment operator.
@@ -82,94 +91,94 @@ public:
     }
 
     // Addition operators.
-    Vector2& operator+=(const Vector2& rhs) {
+    constexpr Vector2& operator+=(const Vector2& rhs) {
         x += rhs.x;
         y += rhs.y;
         return *this;
     }
-    friend Vector2 operator+(Vector2 lhs, const Vector2& rhs) {
+    friend constexpr Vector2 operator+(Vector2 lhs, const Vector2& rhs) {
         lhs += rhs;
         return lhs;
     }
-    Vector2& operator+=(const T& rhs) {
+    constexpr Vector2& operator+=(const T& rhs) {
         x += rhs;
         y += rhs;
         return *this;
     }
-    friend Vector2 operator+(Vector2 lhs, const T& rhs) {
+    friend constexpr Vector2 operator+(Vector2 lhs, const T& rhs) {
         lhs += rhs;
         return lhs;
     }
-    friend Vector2 operator+(const T& lhs, Vector2 rhs) {
+    friend constexpr Vector2 operator+(const T& lhs, Vector2 rhs) {
         rhs += lhs;
         return rhs;
     }
 
     // Subtraction operators.
-    Vector2& operator-=(const Vector2& rhs) {
+    constexpr Vector2& operator-=(const Vector2& rhs) {
         x -= rhs.x;
         y -= rhs.y;
         return *this;
     }
-    friend Vector2 operator-(Vector2 lhs, const Vector2& rhs) {
+    friend constexpr Vector2 operator-(Vector2 lhs, const Vector2& rhs) {
         lhs -= rhs;
         return lhs;
     }
-    Vector2& operator-=(const T& rhs) {
+    constexpr Vector2& operator-=(const T& rhs) {
         x -= rhs;
         y -= rhs;
         return *this;
     }
-    friend Vector2 operator-(Vector2 lhs, const T& rhs) {
+    friend constexpr Vector2 operator-(Vector2 lhs, const T& rhs) {
         lhs -= rhs;
         return lhs;
     }
 
     // Negative operator.
-    Vector2 operator-() const {
+    constexpr Vector2 operator-() const {
         return {-x, -y};
     }
 
     // Multiplication operators.
-    Vector2& operator*=(const Vector2& rhs) {
+    constexpr Vector2& operator*=(const Vector2& rhs) {
         x *= rhs.x;
         y *= rhs.y;
         return *this;
     }
-    friend Vector2 operator*(Vector2 lhs, const Vector2& rhs) {
+    friend constexpr Vector2 operator*(Vector2 lhs, const Vector2& rhs) {
         lhs *= rhs;
         return lhs;
     }
-    Vector2& operator*=(const T& rhs) {
+    constexpr Vector2& operator*=(const T& rhs) {
         x *= rhs;
         y *= rhs;
         return *this;
     }
-    friend Vector2 operator*(Vector2 lhs, const T& rhs) {
+    friend constexpr Vector2 operator*(Vector2 lhs, const T& rhs) {
         lhs *= rhs;
         return lhs;
     }
-    friend Vector2 operator*(const T& lhs, Vector2 rhs) {
+    friend constexpr Vector2 operator*(const T& lhs, Vector2 rhs) {
         rhs *= lhs;
         return rhs;
     }
 
     // Division operators.
-    Vector2& operator/=(const Vector2& rhs) {
+    constexpr Vector2& operator/=(const Vector2& rhs) {
         x /= rhs.x;
         y /= rhs.y;
         return *this;
     }
-    friend Vector2 operator/(Vector2 lhs, const Vector2& rhs) {
+    friend constexpr Vector2 operator/(Vector2 lhs, const Vector2& rhs) {
         lhs /= rhs;
         return lhs;
     }
-    Vector2& operator/=(const T& rhs) {
+    constexpr Vector2& operator/=(const T& rhs) {
         x /= rhs;
         y /= rhs;
         return *this;
     }
-    friend Vector2 operator/(Vector2 lhs, const T& rhs) {
+    friend constexpr Vector2 operator/(Vector2 lhs, const T& rhs) {
         lhs /= rhs;
         return lhs;
     }

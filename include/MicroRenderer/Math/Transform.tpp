@@ -80,8 +80,24 @@ Matrix4<T> Transform::orthographicProjection(T left, T right, T bottom, T top, T
 }
 
 template<typename T>
+Matrix4<T> Transform::perspectiveProjection(T left, T right, T bottom, T top, T near, T far) {
+    return Matrix4<T>{
+        2 * near / (right - left), 0, 0, 0,
+        0, 2 * near / (top - bottom), 0, 0,
+        (right + left) / (left - right), (top + bottom) / (bottom - top), far / (far - near), 1,
+        0, 0, far * near / (near - far), 0
+    };
+}
+
+template<typename T>
 Matrix4<T> Transform::perspectiveProjection(T vertical_fov, T aspect_ratio, T near, T far) {
     const T c = 1 / std::tan(vertical_fov / 2);
+    // return Matrix4<T>{
+    //     c / aspect_ratio, 0, 0, 0,
+    //     0, c, 0, 0,
+    //     0, 0, (far + near) / (near - far), -1,
+    //     0, 0, 2 * far * near / (near - far), 0
+    // };
     return Matrix4<T>{
         c / aspect_ratio, 0, 0, 0,
         0, c, 0, 0,

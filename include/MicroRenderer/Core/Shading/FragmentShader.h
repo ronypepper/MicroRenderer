@@ -8,22 +8,26 @@
 
 namespace MicroRenderer {
 
-template<typename T, class ShaderInterface, class Derived>
+template<typename T, template <typename> class Interface, template <typename> class Derived>
 class BaseFragmentShader
 {
-    USE_SHADER_INTERFACE_TYPES(ShaderInterface)
 public:
-    static void interpolateTo(const UniformData uniform, const TriangleData triangle, const int32 x, const int32 y)
+    USE_SHADER_INTERFACE(Interface<T>);
+
+    static void interpolateTo(UniformData uniform, Fragment* fragment, TriangleData triangle, VertexData vertex,
+                              const Vector2<T>& offset, int32 x, int32 y)
     {
-        Derived::interpolateTo_implementation(uniform, triangle, x, y);
+        Derived<T>::interpolateTo_implementation(uniform, fragment, triangle, vertex, offset, x, y);
     }
-    static void interpolateRight(const UniformData uniform, const TriangleData triangle)
+
+    static void interpolateRight(UniformData uniform, Fragment* fragment, TriangleData triangle)
     {
-        Derived::interpolateRight_implementation(uniform, triangle);
+        Derived<T>::interpolateRight_implementation(uniform, fragment, triangle);
     }
-    static Vector3<T> shadeFragment(const UniformData uniform, const TriangleData triangle)
+
+    static ShaderOutput computeColor(UniformData uniform, Fragment* fragment, TriangleData triangle)
     {
-        return Derived::shadeFragment_implementation(uniform, triangle);
+        return Derived<T>::computeColor_implementation(uniform, fragment, triangle);
     }
 };
 

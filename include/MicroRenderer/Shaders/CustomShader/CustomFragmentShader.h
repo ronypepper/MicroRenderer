@@ -4,24 +4,26 @@
 
 #pragma once
 #include "MicroRenderer/Core/Shading/FragmentShader.h"
-#include "CustomShaderInterface.h"
+#include "MicroRenderer/Shaders/CustomShader/CustomShaderInterface.h"
 
 namespace MicroRenderer {
 
 template<typename T>
-class CustomFragmentShader : public BaseFragmentShader<T, CustomShaderInterface<T>, CustomFragmentShader<T>>
+class CustomFragmentShader : public BaseFragmentShader<T, CustomShaderInterface, CustomFragmentShader>
 {
-    USE_SHADER_INTERFACE_TYPES(CustomShaderInterface<T>)
 public:
-    static void interpolateTo(const UniformData uniform, const TriangleData triangle, const int32 x, const int32 y)
+    USE_SHADER_INTERFACE(CustomShaderInterface<T>);
+
+    static void interpolateTo_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle,
+                                             VertexData vertex, const Vector2<T>& offset, int32 x, int32 y)
     {
         // Implement here.
     }
-    static void interpolateRight(const UniformData uniform, const TriangleData triangle)
+    static void interpolateRight_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
     {
         // Implement here.
     }
-    static Vector3<T> shadeFragment(const UniformData uniform, const TriangleData triangle)
+    static ShaderOutput computeColor_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
     {
         // Implement here.
         return {static_cast<T>(1.0)};

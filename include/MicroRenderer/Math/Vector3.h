@@ -12,6 +12,8 @@ namespace MicroRenderer {
 template<typename T>
 class Vector3 {
 public:
+    static_assert(std::is_arithmetic_v<T>, "Template type of Vector3<T> must be arithmetic!");
+
     // Component values.
     union {
         T components[3];
@@ -31,30 +33,37 @@ public:
 
     // Constructors.
     Vector3() {}
-    Vector3(T value) {
+    constexpr Vector3(T value) {
         x = value;
         y = value;
         z = value;
     }
-    Vector3(T x, T y, T z) {
+    constexpr Vector3(T x, T y, T z) {
         this->x = x;
         this->y = y;
         this->z = z;
     }
-    Vector3(const Vector3& other) {
+    constexpr Vector3(const Vector3& other) {
         x = other.x;
         y = other.y;
         z = other.z;
     }
-    Vector3(const Vector2<T>& xy, T z) {
+    constexpr Vector3(const Vector2<T>& xy, T z) {
         this->x = xy.x;
         this->y = xy.y;
         this->z = z;
     }
-    Vector3(T x, const Vector2<T>& yz) {
+    constexpr Vector3(T x, const Vector2<T>& yz) {
         this->x = x;
         this->y = yz.x;
         this->z = yz.y;
+    }
+
+    // Conversion operator.
+    template<typename U>
+    explicit constexpr operator Vector3<U>() const
+    {
+        return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)};
     }
 
     // Assignment operator.
@@ -74,7 +83,7 @@ public:
     }
 
     // Sub-vector access.
-    Vector2<T> getXY()
+    Vector2<T> getXY() const
     {
         return Vector2<T>(x, y);
     }
@@ -100,102 +109,102 @@ public:
     }
 
     // Addition operators.
-    Vector3& operator+=(const Vector3& rhs) {
+    constexpr Vector3& operator+=(const Vector3& rhs) {
         x += rhs.x;
         y += rhs.y;
         z += rhs.z;
         return *this;
     }
-    friend Vector3 operator+(Vector3 lhs, const Vector3& rhs) {
+    friend constexpr Vector3 operator+(Vector3 lhs, const Vector3& rhs) {
         lhs += rhs;
         return lhs;
     }
-    Vector3& operator+=(const T& rhs) {
+    constexpr Vector3& operator+=(const T& rhs) {
         x += rhs;
         y += rhs;
         z += rhs;
         return *this;
     }
-    friend Vector3 operator+(Vector3 lhs, const T& rhs) {
+    friend constexpr Vector3 operator+(Vector3 lhs, const T& rhs) {
         lhs += rhs;
         return lhs;
     }
-    friend Vector3 operator+(const T& lhs, Vector3 rhs) {
+    friend constexpr Vector3 operator+(const T& lhs, Vector3 rhs) {
         rhs += lhs;
         return rhs;
     }
 
     // Subtraction operators.
-    Vector3& operator-=(const Vector3& rhs) {
+    constexpr Vector3& operator-=(const Vector3& rhs) {
         x -= rhs.x;
         y -= rhs.y;
         z -= rhs.z;
         return *this;
     }
-    friend Vector3 operator-(Vector3 lhs, const Vector3& rhs) {
+    friend constexpr Vector3 operator-(Vector3 lhs, const Vector3& rhs) {
         lhs -= rhs;
         return lhs;
     }
-    Vector3& operator-=(const T& rhs) {
+    constexpr Vector3& operator-=(const T& rhs) {
         x -= rhs;
         y -= rhs;
         z -= rhs;
         return *this;
     }
-    friend Vector3 operator-(Vector3 lhs, const T& rhs) {
+    friend constexpr Vector3 operator-(Vector3 lhs, const T& rhs) {
         lhs -= rhs;
         return lhs;
     }
 
     // Negative operator.
-    Vector3 operator-() const {
+    constexpr Vector3 operator-() const {
         return {-x, -y, -z};
     }
 
     // Multiplication operators.
-    Vector3& operator*=(const Vector3& rhs) {
+    constexpr Vector3& operator*=(const Vector3& rhs) {
         x *= rhs.x;
         y *= rhs.y;
         z *= rhs.z;
         return *this;
     }
-    friend Vector3 operator*(Vector3 lhs, const Vector3& rhs) {
+    friend constexpr Vector3 operator*(Vector3 lhs, const Vector3& rhs) {
         lhs *= rhs;
         return lhs;
     }
-    Vector3& operator*=(const T& rhs) {
+    constexpr Vector3& operator*=(const T& rhs) {
         x *= rhs;
         y *= rhs;
         z *= rhs;
         return *this;
     }
-    friend Vector3 operator*(Vector3 lhs, const T& rhs) {
+    friend constexpr Vector3 operator*(Vector3 lhs, const T& rhs) {
         lhs *= rhs;
         return lhs;
     }
-    friend Vector3 operator*(const T& lhs, Vector3 rhs) {
+    friend constexpr Vector3 operator*(const T& lhs, Vector3 rhs) {
         rhs *= lhs;
         return rhs;
     }
 
     // Division operators.
-    Vector3& operator/=(const Vector3& rhs) {
+    constexpr Vector3& operator/=(const Vector3& rhs) {
         x /= rhs.x;
         y /= rhs.y;
         z /= rhs.z;
         return *this;
     }
-    friend Vector3 operator/(Vector3 lhs, const Vector3& rhs) {
+    friend constexpr Vector3 operator/(Vector3 lhs, const Vector3& rhs) {
         lhs /= rhs;
         return lhs;
     }
-    Vector3& operator/=(const T& rhs) {
+    constexpr Vector3& operator/=(const T& rhs) {
         x /= rhs;
         y /= rhs;
         z /= rhs;
         return *this;
     }
-    friend Vector3 operator/(Vector3 lhs, const T& rhs) {
+    friend constexpr Vector3 operator/(Vector3 lhs, const T& rhs) {
         lhs /= rhs;
         return lhs;
     }

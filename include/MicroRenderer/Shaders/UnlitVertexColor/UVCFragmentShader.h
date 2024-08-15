@@ -4,26 +4,40 @@
 
 #pragma once
 #include "MicroRenderer/Core/Shading/FragmentShader.h"
-#include "UVCShaderInterface.h"
+#include "MicroRenderer/Shaders/UnlitVertexColor/UVCShaderInterface.h"
 
 namespace MicroRenderer {
 
 template<typename T>
-class UVCFragmentShader : public BaseFragmentShader<T, UVCShaderInterface<T>, UVCFragmentShader<T>>
+class UVCFragmentShader : public BaseFragmentShader<T, UVCShaderInterface, UVCFragmentShader>
 {
-    USE_SHADER_INTERFACE_TYPES(UVCShaderInterface<T>)
 public:
-    static void interpolateTo(const UniformData uniform, const TriangleData triangle, const int32 x, const int32 y)
+    USE_SHADER_INTERFACE(UVCShaderInterface<T>);
+
+    static void interpolateTo_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle,
+                                             VertexData vertex, const Vector2<T>& offset, int32 x, int32 y)
     {
-        // Implement here.
+        // Vertex color.
+        fragment->color = computeAttributeAt(vertex.source->color, triangle.buffer->color_incs, offset);
+
+        // Texture.
+        fragment->uv = computeAttributeAt(vertex.source->uv_coordinates, triangle.buffer->uv_incs, offset);
     }
-    static void interpolateRight(const UniformData uniform, const TriangleData triangle)
+    static void interpolateRight_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
     {
-        // Implement here.
+        // Vertex color.
+        incrementAttributeRight(fragment->color, triangle.buffer->color_incs);
+
+        // Texture.
+        incrementAttributeRight(fragment->uv, triangle.buffer->uv_incs);
     }
-    static Vector3<T> shadeFragment(const UniformData uniform, const TriangleData triangle)
+    static ShaderOutput computeColor_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
     {
-        return triangle.source->color;
+        // Vertex color.
+        return fragment->color;
+
+        // Texture.
+        return uniform.global->tex_color.samplePixelAt(fragment->uv);
     }
 };
 

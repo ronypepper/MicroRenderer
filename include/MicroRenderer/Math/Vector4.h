@@ -13,6 +13,8 @@ namespace MicroRenderer {
 template<typename T>
 class Vector4 {
 public:
+    static_assert(std::is_arithmetic_v<T>, "Template type of Vector4<T> must be arithmetic!");
+
     // Component values.
     union {
         T components[4];
@@ -34,59 +36,66 @@ public:
 
     // Constructors.
     Vector4() {}
-    Vector4(T value) {
+    constexpr Vector4(T value) {
         x = value;
         y = value;
         z = value;
         w = value;
     }
-    Vector4(T x, T y, T z, T w) {
+    constexpr Vector4(T x, T y, T z, T w) {
         this->x = x;
         this->y = y;
         this->z = z;
         this->w = w;
     }
-    Vector4(const Vector4& other) {
+    constexpr Vector4(const Vector4& other) {
         x = other.x;
         y = other.y;
         z = other.z;
         w = other.w;
     }
-    Vector4(const Vector3<T>& xyz, T w) {
+    constexpr Vector4(const Vector3<T>& xyz, T w) {
         this->x = xyz.x;
         this->y = xyz.y;
         this->z = xyz.z;
         this->w = w;
     }
-    Vector4(T x, const Vector3<T>& yzw) {
+    constexpr Vector4(T x, const Vector3<T>& yzw) {
         this->x = x;
         this->y = yzw.x;
         this->z = yzw.y;
         this->w = yzw.z;
     }
-    Vector4(const Vector2<T>& xy, const Vector2<T>& zw) {
+    constexpr Vector4(const Vector2<T>& xy, const Vector2<T>& zw) {
         this->x = xy.x;
         this->y = xy.y;
         this->z = zw.x;
         this->w = zw.y;
     }
-    Vector4(const Vector2<T>& xy, T z, T w) {
+    constexpr Vector4(const Vector2<T>& xy, T z, T w) {
         this->x = xy.x;
         this->y = xy.y;
         this->z = z;
         this->w = w;
     }
-    Vector4(T x, const Vector2<T>& yz, T w) {
+    constexpr Vector4(T x, const Vector2<T>& yz, T w) {
         this->x = x;
         this->y = yz.x;
         this->z = yz.y;
         this->w = w;
     }
-    Vector4(T x, T y, const Vector2<T>& zw) {
+    constexpr Vector4(T x, T y, const Vector2<T>& zw) {
         this->x = x;
         this->y = y;
         this->z = zw.x;
         this->w = zw.y;
+    }
+
+    // Conversion operator.
+    template<typename U>
+    explicit constexpr operator Vector4<U>()
+    {
+        return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z), static_cast<U>(w)};
     }
 
     // Assignment operator.
@@ -107,11 +116,11 @@ public:
     }
 
     // Sub-vector access.
-    Vector2<T> getXY()
+    Vector2<T> getXY() const
     {
         return Vector2<T>(x, y);
     }
-    Vector3<T> getXYZ()
+    Vector3<T> getXYZ() const
     {
         return Vector3<T>(x, y, z);
     }
@@ -137,110 +146,110 @@ public:
     }
 
     // Addition operators.
-    Vector4& operator+=(const Vector4& rhs) {
+    constexpr Vector4& operator+=(const Vector4& rhs) {
         x += rhs.x;
         y += rhs.y;
         z += rhs.z;
         w += rhs.w;
         return *this;
     }
-    friend Vector4 operator+(Vector4 lhs, const Vector4& rhs) {
+    friend constexpr Vector4 operator+(Vector4 lhs, const Vector4& rhs) {
         lhs += rhs;
         return lhs;
     }
-    Vector4& operator+=(const T& rhs) {
+    constexpr Vector4& operator+=(const T& rhs) {
         x += rhs;
         y += rhs;
         z += rhs;
         w += rhs;
         return *this;
     }
-    friend Vector4 operator+(Vector4 lhs, const T& rhs) {
+    friend constexpr Vector4 operator+(Vector4 lhs, const T& rhs) {
         lhs += rhs;
         return lhs;
     }
-    friend Vector4 operator+(const T& lhs, Vector4 rhs) {
+    friend constexpr Vector4 operator+(const T& lhs, Vector4 rhs) {
         rhs += lhs;
         return rhs;
     }
 
     // Subtraction operators.
-    Vector4& operator-=(const Vector4& rhs) {
+    constexpr Vector4& operator-=(const Vector4& rhs) {
         x -= rhs.x;
         y -= rhs.y;
         z -= rhs.z;
         w -= rhs.w;
         return *this;
     }
-    friend Vector4 operator-(Vector4 lhs, const Vector4& rhs) {
+    friend constexpr Vector4 operator-(Vector4 lhs, const Vector4& rhs) {
         lhs -= rhs;
         return lhs;
     }
-    Vector4& operator-=(const T& rhs) {
+    constexpr Vector4& operator-=(const T& rhs) {
         x -= rhs;
         y -= rhs;
         z -= rhs;
         w -= rhs;
         return *this;
     }
-    friend Vector4 operator-(Vector4 lhs, const T& rhs) {
+    friend constexpr Vector4 operator-(Vector4 lhs, const T& rhs) {
         lhs -= rhs;
         return lhs;
     }
 
     // Negative operator.
-    Vector4 operator-() const {
+    constexpr Vector4 operator-() const {
         return {-x, -y, -z, -w};
     }
 
     // Multiplication operators.
-    Vector4& operator*=(const Vector4& rhs) {
+    constexpr Vector4& operator*=(const Vector4& rhs) {
         x *= rhs.x;
         y *= rhs.y;
         z *= rhs.z;
         w *= rhs.w;
         return *this;
     }
-    friend Vector4 operator*(Vector4 lhs, const Vector4& rhs) {
+    friend constexpr Vector4 operator*(Vector4 lhs, const Vector4& rhs) {
         lhs *= rhs;
         return lhs;
     }
-    Vector4& operator*=(const T& rhs) {
+    constexpr Vector4& operator*=(const T& rhs) {
         x *= rhs;
         y *= rhs;
         z *= rhs;
         w *= rhs;
         return *this;
     }
-    friend Vector4 operator*(Vector4 lhs, const T& rhs) {
+    friend constexpr Vector4 operator*(Vector4 lhs, const T& rhs) {
         lhs *= rhs;
         return lhs;
     }
-    friend Vector4 operator*(const T& lhs, Vector4 rhs) {
+    friend constexpr Vector4 operator*(const T& lhs, Vector4 rhs) {
         rhs *= lhs;
         return rhs;
     }
 
     // Division operators.
-    Vector4& operator/=(const Vector4& rhs) {
+    constexpr Vector4& operator/=(const Vector4& rhs) {
         x /= rhs.x;
         y /= rhs.y;
         z /= rhs.z;
         w /= rhs.w;
         return *this;
     }
-    friend Vector4 operator/(Vector4 lhs, const Vector4& rhs) {
+    friend constexpr Vector4 operator/(Vector4 lhs, const Vector4& rhs) {
         lhs /= rhs;
         return lhs;
     }
-    Vector4& operator/=(const T& rhs) {
+    constexpr Vector4& operator/=(const T& rhs) {
         x /= rhs;
         y /= rhs;
         z /= rhs;
         w /= rhs;
         return *this;
     }
-    friend Vector4 operator/(Vector4 lhs, const T& rhs) {
+    friend constexpr Vector4 operator/(Vector4 lhs, const T& rhs) {
         lhs /= rhs;
         return lhs;
     }
