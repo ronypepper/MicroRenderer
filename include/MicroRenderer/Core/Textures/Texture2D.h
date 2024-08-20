@@ -44,7 +44,9 @@ public:
 
     Texture2D(BufferPointer address, int32 width, int32 height);
 
-    void changeBuffer(BufferPointer address, int32 width, int32 height);
+    void setBuffer(BufferPointer address);
+
+    void setResolution(int32 width, int32 height);
 
     BufferPointer getBuffer() const;
 
@@ -52,7 +54,9 @@ public:
 
     int32 getHeight() const;
 
-    BufferPosition getBufferPositionAt(int32 x, int32 y) const;
+    BufferPosition pixelNumToBufferPosition(int32 pixel_num) const;
+
+    BufferPosition getWrappedBufferPosition(int32 x, int32 y) const;
 
     void moveBufferPositionRight(BufferPosition& position);
 
@@ -77,6 +81,7 @@ public:
     void saveToPPMImage(const std::string& file_name) const;
 
     bool verifyBufferPosition(BufferPosition position) const;
+private:
 
     // Texture width.
     int32 texture_width = 0;

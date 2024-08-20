@@ -7,7 +7,7 @@
 
 namespace MicroRenderer {
 
-// Linear Interpolation.
+// Linear interpolation.
 
 template<typename T, typename Attribute>
     Attribute interpolateLinearly(const Attribute& from, const Attribute& to, T from_factor, T to_factor)
@@ -15,7 +15,7 @@ template<typename T, typename Attribute>
     return from * from_factor + to * to_factor;
 }
 
-// Barycentric Interpolation.
+// Barycentric interpolation.
 
 template<typename T>
 struct BarycentricIncrements
@@ -59,10 +59,29 @@ Attribute computeAttributeAt(const Attribute& attr, const AttributeIncrements<At
     return attr + attr_incs.x * offset.x + attr_incs.y * offset.y;
 }
 
-template<typename Attribute>
-void incrementAttributeRight(Attribute& attr, const AttributeIncrements<Attribute>& attr_incs)
+enum class IncrementationMode : uint32
 {
-    attr += attr_incs.x;
+    OneInX,
+    OneInY,
+    OffsetInX,
+    OffsetInY
+};
+
+template<IncrementationMode mode, typename Attribute>
+void incrementAttributes(Attribute& attr, const AttributeIncrements<Attribute>& attr_incs, int32 offset = 1)
+{
+    if constexpr(mode == IncrementationMode::OneInX) {
+        attr += attr_incs.x;
+    }
+    else if constexpr(mode == IncrementationMode::OneInY) {
+        attr += attr_incs.y;
+    }
+    else if constexpr(mode == IncrementationMode::OffsetInX) {
+        attr += attr_incs.x * offset;
+    }
+    else if constexpr(mode == IncrementationMode::OffsetInY) {
+        attr += attr_incs.y * offset;
+    }
 }
 
 } // namespace MicroRenderer

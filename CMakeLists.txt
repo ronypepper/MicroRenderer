@@ -22,7 +22,7 @@ find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 # 1. Look for a SDL2 package, 2. Look for the SDL2maincomponent and 3. DO NOT fail when SDL2main is not available
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
-add_executable(MicroRenderer test/ppm_image_saver.cpp
+add_executable(MicroRenderer test/3d_freefly_viewer.cpp
         include/MicroRenderer/MicroRenderer.h
         include/MicroRenderer/Math/Vector4.h
         include/MicroRenderer/Math/Vector3.h

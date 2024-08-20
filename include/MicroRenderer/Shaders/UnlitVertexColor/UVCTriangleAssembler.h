@@ -23,16 +23,18 @@ public:
     }
 
     static void setupTriangle_implementation(UniformData uniform, VertexData vertex_1, VertexData vertex_2,
-                                             VertexData vertex_3, TriangleData triangle,
+                                             VertexData vertex_3, TriangleBuffer* triangle, Vector2<T> v1_offset,
                                              const BarycentricIncrements<T>& bc_incs)
     {
-        // Vertex color.
+        // Compute start vertex color and increments.
         computeAttributeIncrements(vertex_1.source->color, vertex_2.source->color, vertex_3.source->color, bc_incs,
-                                   triangle.buffer->color_incs);
+                                   triangle->color_incs);
+        triangle->color = computeAttributeAt(vertex_1.source->color, triangle->color_incs, v1_offset);
 
-        // UV coordinates.
+        // Compute start uv coordinates and increments.
         computeAttributeIncrements(vertex_1.source->uv_coordinates, vertex_2.source->uv_coordinates,
-                                   vertex_3.source->uv_coordinates, bc_incs, triangle.buffer->uv_incs);
+                                   vertex_3.source->uv_coordinates, bc_incs, triangle->uv_incs);
+        triangle->uv = computeAttributeAt(vertex_1.source->uv_coordinates, triangle->uv_incs, v1_offset);
     }
 };
 

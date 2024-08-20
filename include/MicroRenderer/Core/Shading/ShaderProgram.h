@@ -79,8 +79,6 @@ public:
                   "ShaderProgram: VertexBuffer must inherit from BasePerspectiveVertexBuffer when using perspective projection!");
     static_assert(t_cfg.depth_test != DEPTH_TEST_ENABLED || std::is_base_of_v<BaseDepthTriangleBuffer<T>, TriangleBuffer>,
                   "ShaderProgram: TriangleBuffer must inherit from BaseDepthTriangleBuffer when depth test is enabled!");
-    static_assert(t_cfg.depth_test != DEPTH_TEST_ENABLED || std::is_base_of_v<BaseDepthFragment<T>, Fragment>,
-                  "ShaderProgram: Fragment must inherit from BaseDepthFragment when depth test is enabled!");
 
     static constexpr ShaderProgramConfig configuration = t_cfg;
     using InverseNearPlaneType = std::conditional_t<t_cfg.projection == PERSPECTIVE, T, std::monostate>;
@@ -133,7 +131,8 @@ public:
         }
     }
 
-    void setupTriangle(VertexData vertex_1, VertexData vertex_2, VertexData vertex_3, TriangleData triangle)
+    void setupTriangle(VertexData vertex_1, VertexData vertex_2, VertexData vertex_3, TriangleBuffer* triangle,
+                       int32 start_x, int32 start_y)
     {
         const Vector3<T>& pos_1 = vertex_1.buffer->screen_position;
         const Vector3<T>& pos_2 = vertex_2.buffer->screen_position;
@@ -141,39 +140,31 @@ public:
         BarycentricIncrements<T> bc_incs;
         computeBarycentricIncrements(pos_1.getXY(), pos_2.getXY(), pos_3.getXY(), bc_incs);
 
-        if constexpr(t_cfg.depth_test == DEPTH_TEST_ENABLED) {
-            // Compute inverse depth increments.
-            computeAttributeIncrements(pos_1.z, pos_2.z, pos_3.z, bc_incs, triangle.buffer->inverse_depth_incs);
-        }
-
-        TriangleAssembler<T>::setupTriangle(uniform_data, vertex_1, vertex_2, vertex_3, triangle, bc_incs);
-    }
-
-    void interpolateTo(Fragment* fragment, TriangleData triangle, VertexData vertex, int32 x, int32 y)
-    {
-        const Vector2<T> offset = {x - vertex.buffer->screen_position.x, y - vertex.buffer->screen_position.y};
+        const Vector2<T> v1_offset = {start_x - pos_1.x, start_y - pos_1.y};
 
         if constexpr(t_cfg.depth_test == DEPTH_TEST_ENABLED) {
-            // Interpolate inverse depth.
-            fragment->inverse_depth = computeAttributeAt(vertex.buffer->screen_position.z, triangle.buffer->inverse_depth_incs, offset);
+            // Compute start depth and increments.
+            computeAttributeIncrements(pos_1.z, pos_2.z, pos_3.z, bc_incs, triangle->depth_incs);
+            triangle->depth = computeAttributeAt(pos_1.z, triangle->depth_incs, v1_offset);
         }
 
-        FragmentShader<T>::interpolateTo(uniform_data, fragment, triangle, vertex, offset, x, y);
+        TriangleAssembler<T>::setupTriangle(uniform_data, vertex_1, vertex_2, vertex_3, triangle, v1_offset, bc_incs);
     }
 
-    void interpolateRight(Fragment* fragment, TriangleData triangle)
+    template<IncrementationMode mode>
+    void interpolateAttributes(TriangleBuffer* triangle, int32 offset = 1)
     {
         if constexpr(t_cfg.depth_test == DEPTH_TEST_ENABLED) {
-            // Increment inverse depth.
-            incrementAttributeRight(fragment->inverse_depth, triangle.buffer->inverse_depth_incs);
+            // Interpolate depth.
+            incrementAttributes<mode>(triangle->depth, triangle->depth_incs, offset);
         }
 
-        FragmentShader<T>::interpolateRight(uniform_data, fragment, triangle);
+        FragmentShader<T>::interpolateAttributes<mode>(uniform_data, triangle, offset);
     }
 
-    ShaderOutput computeColor(Fragment* fragment, TriangleData triangle)
+    ShaderOutput computeColor(TriangleBuffer* triangle)
     {
-        return FragmentShader<T>::computeColor(uniform_data, fragment, triangle);
+        return FragmentShader<T>::computeColor(uniform_data, triangle);
     }
 private:
     UniformData uniform_data;

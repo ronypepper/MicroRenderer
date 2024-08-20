@@ -14,30 +14,23 @@ class UVCFragmentShader : public BaseFragmentShader<T, UVCShaderInterface, UVCFr
 public:
     USE_SHADER_INTERFACE(UVCShaderInterface<T>);
 
-    static void interpolateTo_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle,
-                                             VertexData vertex, const Vector2<T>& offset, int32 x, int32 y)
+    template<IncrementationMode mode>
+    static void interpolateAttributes_implementation(UniformData uniform, TriangleBuffer* triangle, int32 offset)
     {
-        // Vertex color.
-        fragment->color = computeAttributeAt(vertex.source->color, triangle.buffer->color_incs, offset);
+        // Interpolate vertex color.
+        incrementAttributes<mode>(triangle->color, triangle->color_incs, offset);
 
-        // Texture.
-        fragment->uv = computeAttributeAt(vertex.source->uv_coordinates, triangle.buffer->uv_incs, offset);
+        // Interpolate uv coordinates.
+        incrementAttributes<mode>(triangle->uv, triangle->uv_incs, offset);
     }
-    static void interpolateRight_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
+
+    static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
         // Vertex color.
-        incrementAttributeRight(fragment->color, triangle.buffer->color_incs);
+        //return triangle->color;
 
         // Texture.
-        incrementAttributeRight(fragment->uv, triangle.buffer->uv_incs);
-    }
-    static ShaderOutput computeColor_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
-    {
-        // Vertex color.
-        return fragment->color;
-
-        // Texture.
-        return uniform.global->tex_color.samplePixelAt(fragment->uv);
+        return uniform.instance->texture_color.samplePixelAt(triangle->uv);
     }
 };
 

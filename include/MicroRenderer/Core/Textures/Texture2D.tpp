@@ -7,22 +7,29 @@
 
 #include "Texture2D.h"
 #include <cassert>
-#include <cstring>
 #include <fstream>
+
+#include "Texture2D.h"
 
 namespace MicroRenderer {
 
     template<typename T, TextureConfig t_cfg>
     Texture2D<T, t_cfg>::Texture2D(BufferPointer address, int32 width, int32 height)
     {
-        changeBuffer(address, width, height);
+        setBuffer(address);
+        setResolution(width, height);
     }
 
     template<typename T, TextureConfig t_cfg>
-    void Texture2D<T, t_cfg>::changeBuffer(BufferPointer address, int32 width, int32 height)
+    void Texture2D<T, t_cfg>::setBuffer(BufferPointer address)
+    {
+        buffer = address;
+    }
+
+    template <typename T, TextureConfig t_cfg>
+    void Texture2D<T, t_cfg>::setResolution(int32 width, int32 height)
     {
         assert(width >= 0 && height >= 0);
-        buffer = address;
         texture_width = width;
         texture_height = height;
     }
@@ -45,8 +52,24 @@ namespace MicroRenderer {
         return texture_height;
     }
 
+    template <typename T, TextureConfig t_cfg>
+    typename Texture2D<T, t_cfg>::BufferPosition Texture2D<T, t_cfg>::pixelNumToBufferPosition(int32 pixel_num) const
+    {
+        // Compute position address and alignment inside buffer, based on interal format.
+        BufferPosition position;
+        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 || t_cfg.format == FORMAT_R32 ||
+                      t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
+            position.address = buffer + pixel_num;
+                      }
+        else if constexpr (t_cfg.format == FORMAT_RGB444) {
+            position.address = buffer + (pixel_num >> 1);
+            position.alignment = pixel_num << 31;
+        }
+        return position;
+    }
+
     template<typename T, TextureConfig t_cfg>
-    typename Texture2D<T, t_cfg>::BufferPosition Texture2D<T, t_cfg>::getBufferPositionAt(int32 x, int32 y) const
+    typename Texture2D<T, t_cfg>::BufferPosition Texture2D<T, t_cfg>::getWrappedBufferPosition(int32 x, int32 y) const
     {
         // Modify sample coordinates, based on wrapmode.
         if constexpr (t_cfg.wrapmode == WRAPMODE_CLAMPING) {
@@ -58,18 +81,7 @@ namespace MicroRenderer {
             y = std::abs(y % texture_height);
         }
 
-        // Compute position address and alignment inside buffer, based on interal format.
-        BufferPosition position;
-        const int32 pixel_num = x + texture_width * y;
-        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 || t_cfg.format == FORMAT_R32 ||
-                      t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
-            position.address = buffer + pixel_num;
-        }
-        else if constexpr (t_cfg.format == FORMAT_RGB444) {
-            position.address = buffer + (pixel_num >> 1);
-            position.alignment = pixel_num << 31;
-        }
-        return position;
+        return pixelNumToBufferPosition(x + texture_width * y);
     }
 
     template<typename T, TextureConfig t_cfg>
@@ -105,7 +117,7 @@ namespace MicroRenderer {
     template<typename T, TextureConfig t_cfg>
     typename Texture2D<T, t_cfg>::ExternalType Texture2D<T, t_cfg>::readPixelAt(int32 x, int32 y) const
     {
-        return readPixelAt(getBufferPositionAt(x, y));
+        return readPixelAt(getWrappedBufferPosition(x, y));
     }
 
     template<typename T, TextureConfig t_cfg>
@@ -176,7 +188,7 @@ namespace MicroRenderer {
     template<typename T, TextureConfig t_cfg>
     void Texture2D<T, t_cfg>::drawPixelAt(int32 x, int32 y, const ExternalType& value) requires(t_cfg.access == ACCESS_READWRITE)
     {
-        drawPixelAt(getBufferPositionAt(x, y), value);
+        drawPixelAt(getWrappedBufferPosition(x, y), value);
     }
 
     template<typename T, TextureConfig t_cfg>

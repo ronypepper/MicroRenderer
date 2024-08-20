@@ -14,16 +14,12 @@ class CustomFragmentShader : public BaseFragmentShader<T, CustomShaderInterface,
 public:
     USE_SHADER_INTERFACE(CustomShaderInterface<T>);
 
-    static void interpolateTo_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle,
-                                             VertexData vertex, const Vector2<T>& offset, int32 x, int32 y)
+    template<IncrementationMode mode>
+    static void interpolateAttributes_implementation(UniformData uniform, TriangleBuffer* triangle, int32 offset)
     {
         // Implement here.
     }
-    static void interpolateRight_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
-    {
-        // Implement here.
-    }
-    static ShaderOutput computeColor_implementation(UniformData uniform, Fragment* fragment, TriangleData triangle)
+    static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
         // Implement here.
         return {static_cast<T>(1.0)};

@@ -14,20 +14,15 @@ class BaseFragmentShader
 public:
     USE_SHADER_INTERFACE(Interface<T>);
 
-    static void interpolateTo(UniformData uniform, Fragment* fragment, TriangleData triangle, VertexData vertex,
-                              const Vector2<T>& offset, int32 x, int32 y)
+    template<IncrementationMode mode>
+    static void interpolateAttributes(UniformData uniform, TriangleBuffer* triangle, int32 offset)
     {
-        Derived<T>::interpolateTo_implementation(uniform, fragment, triangle, vertex, offset, x, y);
+        Derived<T>::interpolateAttributes_implementation<mode>(uniform, triangle, offset);
     }
 
-    static void interpolateRight(UniformData uniform, Fragment* fragment, TriangleData triangle)
+    static ShaderOutput computeColor(UniformData uniform, TriangleBuffer* triangle)
     {
-        Derived<T>::interpolateRight_implementation(uniform, fragment, triangle);
-    }
-
-    static ShaderOutput computeColor(UniformData uniform, Fragment* fragment, TriangleData triangle)
-    {
-        return Derived<T>::computeColor_implementation(uniform, fragment, triangle);
+        return Derived<T>::computeColor_implementation(uniform, triangle);
     }
 };
 

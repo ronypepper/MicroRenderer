@@ -21,7 +21,7 @@ public:
         // Implement here.
     }
     static void setupTriangle_implementation(UniformData uniform, VertexData vertex_1, VertexData vertex_2,
-                                             VertexData vertex_3, TriangleData triangle,
+                                             VertexData vertex_3, TriangleBuffer* triangle, Vector2<T> v1_offset,
                                              const BarycentricIncrements<T>& bc_incs)
     {
         // Implement here.

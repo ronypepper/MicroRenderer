@@ -27,13 +27,8 @@ struct BasePerspectiveVertexBuffer
 template<typename T>
 struct BaseDepthTriangleBuffer
 {
-    AttributeIncrements<T> inverse_depth_incs;
-};
-
-template<typename T>
-struct BaseDepthFragment
-{
-    T inverse_depth;
+    T depth;
+    AttributeIncrements<T> depth_incs;
 };
 
 struct ShaderOutput
@@ -50,8 +45,7 @@ struct TriangleIndices
 };
 
 template <typename T, ShaderOutput output, template <typename> class GlobalData, template <typename> class InstanceData,
-          template <typename> class VertexSource, template <typename> class VertexBuffer, template <typename> class
-          TriangleSource, template <typename> class TriangleBuffer, template <typename> class Fragment>
+          template <typename> class VertexSource, template <typename> class VertexBuffer, template <typename> class TriangleBuffer>
 class BaseShaderInterface
 {
     // Deduce return type of fragment shader's computeColor method. ShaderOutput becomes equal to a Texture2D's
@@ -67,9 +61,7 @@ public:
     using InstanceData_type = InstanceData<T>;
     using VertexSource_type = VertexSource<T>;
     using VertexBuffer_type = VertexBuffer<T>;
-    using TriangleSource_type = TriangleSource<T>;
     using TriangleBuffer_type = TriangleBuffer<T>;
-    using Fragment_type = Fragment<T>;
 
     struct UniformData
     {
@@ -81,17 +73,11 @@ public:
         const VertexSource<T>* source;
         VertexBuffer<T>* buffer;
     };
-    struct TriangleData
-    {
-        const TriangleSource<T>* source;
-        TriangleBuffer<T>* buffer;
-    };
     struct ModelData
     {
         uint16 num_vertices;
         uint16 num_triangles;
         const VertexSource<T>* vertices;
-        const TriangleSource<T>* triangles;
         const TriangleIndices* indices;
     };
 };
@@ -105,10 +91,7 @@ public:
     using VertexSource = typename Interface::VertexSource_type; \
     using VertexBuffer = typename Interface::VertexBuffer_type; \
     using VertexData = typename Interface::VertexData; \
-    using TriangleSource = typename Interface::TriangleSource_type; \
     using TriangleBuffer = typename Interface::TriangleBuffer_type; \
-    using Fragment = typename Interface::Fragment_type; \
-    using TriangleData = typename Interface::TriangleData; \
     using ModelData = typename Interface::ModelData;
 
 } // namespace MicroRenderer

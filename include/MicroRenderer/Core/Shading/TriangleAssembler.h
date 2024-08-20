@@ -22,9 +22,9 @@ public:
         Derived<T>::interpolateVertices_implementation(uniform, from, to, new_src, new_buf, from_factor, to_factor);
     }
     static void setupTriangle(UniformData uniform, VertexData vertex_1, VertexData vertex_2, VertexData vertex_3,
-                              TriangleData triangle, const BarycentricIncrements<T>& bc_incs)
+                              TriangleBuffer* triangle, Vector2<T> v1_offset, const BarycentricIncrements<T>& bc_incs)
     {
-        Derived<T>::setupTriangle_implementation(uniform, vertex_1, vertex_2, vertex_3, triangle, bc_incs);
+        Derived<T>::setupTriangle_implementation(uniform, vertex_1, vertex_2, vertex_3, triangle, v1_offset, bc_incs);
     }
 };
 

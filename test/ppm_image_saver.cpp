@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
     UVCInstanceData<float>* instances[2] = {&cube_instance_1, &cube_instance_2};
     my_renderer.getShaderProgram().setGlobalData(&cube_global_data);
     my_renderer.setRenderInstances(2, models, instances);
-    my_renderer.setShadingBuffers(vertex_buffer, triangle_buffer);
-    my_renderer.setRasterizationBuffers(nullptr, nullptr);
+    my_renderer.setVertexBuffers(vertex_buffer);
+    my_renderer.setScanlineBuffers(nullptr, nullptr);
 
     // Camera state.
     Vector3<float> cam_translation = {0.f, 0.f, 0.f};

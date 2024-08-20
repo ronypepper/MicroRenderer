@@ -34,24 +34,12 @@ struct CustomVertexBuffer
 };
 
 template<typename T>
-struct CustomTriangleSource
-{
-    // Define interface here.
-};
-
-template<typename T>
 struct CustomTriangleBuffer
 {
     // Define interface here.
 };
 
 template<typename T>
-struct CustomFragment
-{
-    // Define interface here.
-};
-
-template<typename T>
-using CustomShaderInterface = BaseShaderInterface<T, custom_shader_output, CustomGlobalData, CustomInstanceData, CustomVertexSource, CustomVertexBuffer, CustomTriangleSource, CustomTriangleBuffer, CustomFragment>;
+using CustomShaderInterface = BaseShaderInterface<T, custom_shader_output, CustomGlobalData, CustomInstanceData, CustomVertexSource, CustomVertexBuffer, CustomTriangleBuffer>;
 
 } // namespace MicroRenderer
