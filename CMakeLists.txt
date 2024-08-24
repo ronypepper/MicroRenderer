@@ -57,6 +57,7 @@ set_target_properties(MicroRenderer PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(MicroRenderer PUBLIC include)
 target_include_directories(MicroRenderer PUBLIC assets)
+target_include_directories(MicroRenderer PUBLIC third-party)
 
 # SDL2::SDL2main may or may not be available. It is e.g. required by Windows GUI applications
 if(TARGET SDL2::SDL2main)

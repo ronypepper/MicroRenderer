@@ -156,6 +156,10 @@ private:
 
     Depthbuffer depthbuffer;
 
+    int32 width_minus_one = 0;
+
+    int32 height_minus_one = 0;
+
     NearPlaneType near_plane;
 
     T right_x_clip = static_cast<T>(-0.5);

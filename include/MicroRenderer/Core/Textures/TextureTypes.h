@@ -6,6 +6,7 @@
 #include "TextureConfiguration.h"
 #include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Math/Vector3.h"
+#include "MicroRenderer/Math/Vector4.h"
 
 namespace MicroRenderer {
 
@@ -39,6 +40,15 @@ struct TextureInternal<FORMAT_RGB444, T>
     template<typename U>
     using PixelType = Vector3<U>;
     static constexpr PixelType<uint32> MaxValue = {15, 15, 15};
+};
+
+template<typename T>
+struct TextureInternal<FORMAT_RGBA4444, T>
+{
+    using InternalType = uint16;
+    template<typename U>
+    using PixelType = Vector4<U>;
+    static constexpr PixelType<uint32> MaxValue = {15, 15, 15, 15};
 };
 
 template<typename T>

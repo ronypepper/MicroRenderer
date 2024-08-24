@@ -40,8 +40,19 @@ typename Renderer<T, t_cfg, ShaderProgram>::Depthbuffer& Renderer<T, t_cfg, Shad
 template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setResolution(int32 width, int32 height)
 {
-    framebuffer.setResolution(width, height);
-    depthbuffer.setResolution(width, height);
+    assert(width >= 0 && height >= 0);
+    int32 tex_height = 1;
+    if constexpr (t_cfg.render_mode == FRAMEBUFFER) {
+        tex_height = height;
+    }
+    if constexpr (shader_cfg.shading == SHADING_ENABLED) {
+        framebuffer.setResolution(width, tex_height);
+    }
+    if constexpr (shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
+        depthbuffer.setResolution(width, tex_height);
+    }
+    width_minus_one = width - 1;
+    height_minus_one = height - 1;
 
     // Compute clip screen borders.
     right_x_clip = static_cast<T>(-0.5) + static_cast<T>(width);
@@ -96,10 +107,10 @@ void Renderer<T, t_cfg, ShaderProgram>::setRasterizationBuffers(RasterizationBuf
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T>& color)
 {
-    x0 = std::clamp(x0, static_cast<T>(-0.5), static_cast<T>(framebuffer.getWidth()) - static_cast<T>(0.5));
-    y0 = std::clamp(y0, static_cast<T>(-0.5), static_cast<T>(framebuffer.getHeight()) - static_cast<T>(0.5));
-    x1 = std::clamp(x1, static_cast<T>(-0.5), static_cast<T>(framebuffer.getWidth()) - static_cast<T>(0.5));
-    y1 = std::clamp(y1, static_cast<T>(-0.5), static_cast<T>(framebuffer.getHeight()) - static_cast<T>(0.5));
+    x0 = std::clamp(x0, static_cast<T>(-0.5), right_x_clip);
+    y0 = std::clamp(y0, static_cast<T>(-0.5), top_y_clip);
+    x1 = std::clamp(x1, static_cast<T>(-0.5), right_x_clip);
+    y1 = std::clamp(y1, static_cast<T>(-0.5), top_y_clip);
     rasterizeLineDDAUnsafe(x0, y0, x1, y1, color);
 }
 
@@ -340,7 +351,9 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
     const Vector3<T>& v3_screen_pos = vertices[2].buffer->screen_position;
 
     // Lambda for computing the outcode of a vertex for Cohen-Sutherland clipping.
-    auto getCohenSutherlandOutcode = [=](const Vector3<T>& position) -> uint8 {
+    auto getCohenSutherlandOutcode = [right_x_clip = this->right_x_clip, top_y_clip = this->top_y_clip]
+                                     (const Vector3<T>& position) -> uint8
+    {
         constexpr T left_x_clip = static_cast<T>(-0.5);
         constexpr T bottom_y_clip = static_cast<T>(-0.5);
 
@@ -522,7 +535,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
             const T y_end = positions[end_idx]->y;
             const T y_middle = positions[middle_idx]->y;
             rasterization.y_halftri_end = static_cast<int16>(std::floor(y_middle));
-            if (rasterization.y_halftri_end < framebuffer.getHeight() - 1) {
+            if (rasterization.y_halftri_end < height_minus_one) {
                 // Draw both half-triangles.
                 rasterization.y_fulltri_end = static_cast<int16>(std::floor(y_end));
 
@@ -655,10 +668,10 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
 
     // Compute start and end pixels of scanline.
     const int32 x_start = std::max(static_cast<int32>(std::ceil(rasterization.left_x)), static_cast<int32>(0));
-    const int32 x_stop = std::min(static_cast<int32>(std::floor(rasterization.right_x)), framebuffer.getWidth() - 1);
+    const int32 x_stop = std::min(static_cast<int32>(std::floor(rasterization.right_x)), width_minus_one);
     if (x_start <= x_stop) {
         // Interpolate in x to first pixel on scanline.
-        shader_program.interpolateAttributes<IncrementationMode::OffsetInX>(triangle, x_start - rasterization.prev_scanline_stop_x);
+        shader_program.template interpolateAttributes<IncrementationMode::OffsetInX>(triangle, x_start - rasterization.prev_scanline_stop_x);
 
         // Store end of scanline for interpolation in x at next scanline.
         rasterization.prev_scanline_stop_x = x_stop;
@@ -670,7 +683,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
                 depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth);
             }
             for (int32 x = x_start; x < x_stop; ++x) {
-                shader_program.interpolateAttributes<IncrementationMode::OneInX>(triangle);
+                shader_program.template interpolateAttributes<IncrementationMode::OneInX>(triangle);
                 depthbuffer.moveBufferPositionRight(depthbuffer_position);
                 if (triangle->depth < depthbuffer.readPixelAt(depthbuffer_position)) {
                     depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth);
@@ -681,7 +694,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
             auto framebuffer_position = getPositionInBuffer(framebuffer, x_start, scanline);
             framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
             for (int32 x = x_start; x < x_stop; ++x) {
-                shader_program.interpolateAttributes<IncrementationMode::OneInX>(triangle);
+                shader_program.template interpolateAttributes<IncrementationMode::OneInX>(triangle);
                 framebuffer.moveBufferPositionRight(framebuffer_position);
                 framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
             }
@@ -694,7 +707,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
                 framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
             }
             for (int32 x = x_start; x < x_stop; ++x) {
-                shader_program.interpolateAttributes<IncrementationMode::OneInX>(triangle);
+                shader_program.template interpolateAttributes<IncrementationMode::OneInX>(triangle);
                 framebuffer.moveBufferPositionRight(framebuffer_position);
                 depthbuffer.moveBufferPositionRight(depthbuffer_position);
                 if (triangle->depth < depthbuffer.readPixelAt(depthbuffer_position)) {
@@ -710,7 +723,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
     rasterization.right_x += rasterization.right_dx_per_dy;
 
     // Interpolate in y to next scanline.
-    shader_program.interpolateAttributes<IncrementationMode::OneInY>(triangle);
+    shader_program.template interpolateAttributes<IncrementationMode::OneInY>(triangle);
 }
 
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
@@ -722,7 +735,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeFullTriangle(RasterizationBuffer& r
 
     // Lambda for rasterizing half a triangle.
     auto rasterizeHalfTriangle = [&rasterization, this](int32 y_start) {
-        const int32 y_end = std::min(static_cast<int32>(rasterization.y_halftri_end), framebuffer.getHeight() - 1);
+        const int32 y_end = std::min(static_cast<int32>(rasterization.y_halftri_end), height_minus_one);
         for (int32 y = y_start; y <= y_end; ++y) {
             shadeScanlineOfTriangle(rasterization, y);
         }

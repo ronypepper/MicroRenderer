@@ -50,7 +50,7 @@ public:
 
     // Conversion operator.
     template<typename U>
-    explicit constexpr operator Vector2<U>()
+    explicit constexpr operator Vector2<U>() const
     {
         return {static_cast<U>(x), static_cast<U>(y)};
     }

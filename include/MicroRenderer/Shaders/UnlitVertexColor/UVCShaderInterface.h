@@ -12,7 +12,7 @@
 
 namespace MicroRenderer {
 
-constexpr ShaderOutput uvc_shader_output = {FORMAT_RGB888, TYPE_NORMALIZED};
+constexpr ShaderOutput uvc_shader_output = {FORMAT_RGBA4444, TYPE_NORMALIZED};
 
 template<typename T>
 struct UVCGlobalData

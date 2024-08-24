@@ -19,6 +19,7 @@ enum TextureInternalFormat : uint32
     FORMAT_RGB888,
     FORMAT_RGB565,
     FORMAT_RGB444,
+    FORMAT_RGBA4444,
     FORMAT_R8,
     FORMAT_R16,
     FORMAT_R32,

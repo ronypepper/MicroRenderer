@@ -30,7 +30,9 @@ public:
         //return triangle->color;
 
         // Texture.
-        return uniform.instance->texture_color.samplePixelAt(triangle->uv);
+        auto color = uniform.instance->texture_color.samplePixelAt(triangle->uv);
+        return {color.g, color.b, 1.f, color.r};
+        //return uniform.instance->texture_color.samplePixelAt(triangle->uv);
     }
 };
 

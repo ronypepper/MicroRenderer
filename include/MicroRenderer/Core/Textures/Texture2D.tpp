@@ -57,10 +57,11 @@ namespace MicroRenderer {
     {
         // Compute position address and alignment inside buffer, based on interal format.
         BufferPosition position;
-        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 || t_cfg.format == FORMAT_R32 ||
-                      t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
+        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 ||
+                      t_cfg.format == FORMAT_RGBA4444 || t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 ||
+                      t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
             position.address = buffer + pixel_num;
-                      }
+        }
         else if constexpr (t_cfg.format == FORMAT_RGB444) {
             position.address = buffer + (pixel_num >> 1);
             position.alignment = pixel_num << 31;
@@ -88,8 +89,9 @@ namespace MicroRenderer {
     void Texture2D<T, t_cfg>::moveBufferPositionRight(BufferPosition& position)
     {
         // Move position address and alignment inside buffer by one pixel, based on interal format.
-        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 || t_cfg.format == FORMAT_R32 ||
-                      t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
+        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 ||
+                      t_cfg.format == FORMAT_RGBA4444 || t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 ||
+                      t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
             position.address += 1;
         }
         else if constexpr (t_cfg.format == FORMAT_RGB444) {
@@ -108,8 +110,8 @@ namespace MicroRenderer {
     {
         // Move position address and alignment inside buffer by one pixel row, based on interal format.
         if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 || t_cfg.format == FORMAT_RGB444 ||
-                      t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8 ||
-                      t_cfg.format == FORMAT_DEPTH) {
+                      t_cfg.format == FORMAT_RGBA4444 || t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 ||
+                      t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
             position.address += texture_width;
         }
     }
@@ -160,6 +162,13 @@ namespace MicroRenderer {
                 pixel.g = static_cast<uint32>(position.address->r & 0x0F);
                 pixel.b = static_cast<uint32>(position.address->g >> 4);
             }
+        }
+        else if constexpr (t_cfg.format == FORMAT_RGBA4444) {
+            assert(verifyBufferPosition(position));
+            pixel.r = static_cast<uint32>((*position.address & 0xF000) >> 8);
+            pixel.g = static_cast<uint32>((*position.address & 0x0F00) >> 4);
+            pixel.b = static_cast<uint32>((*position.address & 0x00F0) << 0);
+            pixel.a = static_cast<uint32>((*position.address & 0x000F) << 4);
         }
         else if constexpr (t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8) {
             pixel = static_cast<uint32>(*position.address);
@@ -256,6 +265,13 @@ namespace MicroRenderer {
                 position.address->g |= static_cast<uint8>(pixel.b << 4);
             }
         }
+        else if constexpr (t_cfg.format == FORMAT_RGBA4444) {
+            assert(verifyBufferPosition(position));
+            *position.address = static_cast<uint16>(pixel.r << 12);
+            *position.address |= static_cast<uint16>(pixel.g << 8);
+            *position.address |= static_cast<uint16>(pixel.b << 4);
+            *position.address |= static_cast<uint16>(pixel.a);
+        }
         else if constexpr (t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8) {
             *position.address = static_cast<InternalType>(pixel);
         }
@@ -321,6 +337,9 @@ namespace MicroRenderer {
         else if constexpr (t_cfg.format == FORMAT_RGB444) {
             file << "P3\n" << texture_width << ' ' << texture_height << "\n15\n";
         }
+        else if constexpr (t_cfg.format == FORMAT_RGBA4444) {
+            file << "P3\n" << texture_width << ' ' << texture_height << "\n15\n";
+        }
         else if constexpr (t_cfg.format == FORMAT_R8) {
             file << "P2\n" << texture_width << ' ' << texture_height << "\n255\n";
         }
@@ -374,6 +393,9 @@ namespace MicroRenderer {
                 else if constexpr (t_cfg.format == FORMAT_RGB444) {
                     file << std::to_string(pixel.r) << " " << std::to_string(pixel.g) << " " << std::to_string(pixel.b) << "\n";
                 }
+                else if constexpr (t_cfg.format == FORMAT_RGBA4444) {
+                    file << std::to_string(pixel.r) << " " << std::to_string(pixel.g) << " " << std::to_string(pixel.b) << "\n";
+                }
                 else if constexpr (t_cfg.format == FORMAT_R8) {
                     file << std::to_string(pixel) << "\n";
                 }
@@ -394,8 +416,9 @@ namespace MicroRenderer {
         if (!buffer || position.address < buffer)
             return false;
         int32 num_pixels = texture_width * texture_height;
-        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 || t_cfg.format == FORMAT_R32 ||
-                      t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
+        if constexpr (t_cfg.format == FORMAT_RGB888 || t_cfg.format == FORMAT_RGB565 ||
+                      t_cfg.format == FORMAT_RGBA4444 || t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 ||
+                      t_cfg.format == FORMAT_R8 || t_cfg.format == FORMAT_DEPTH) {
             if (position.address >= buffer + num_pixels)
                 return false;
         }

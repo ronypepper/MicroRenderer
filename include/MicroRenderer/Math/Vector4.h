@@ -93,7 +93,7 @@ public:
 
     // Conversion operator.
     template<typename U>
-    explicit constexpr operator Vector4<U>()
+    explicit constexpr operator Vector4<U>() const
     {
         return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z), static_cast<U>(w)};
     }

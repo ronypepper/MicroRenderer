@@ -159,7 +159,7 @@ public:
             incrementAttributes<mode>(triangle->depth, triangle->depth_incs, offset);
         }
 
-        FragmentShader<T>::interpolateAttributes<mode>(uniform_data, triangle, offset);
+        FragmentShader<T>::template interpolateAttributes<mode>(uniform_data, triangle, offset);
     }
 
     ShaderOutput computeColor(TriangleBuffer* triangle)

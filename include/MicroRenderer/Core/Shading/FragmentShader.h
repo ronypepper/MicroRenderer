@@ -17,7 +17,7 @@ public:
     template<IncrementationMode mode>
     static void interpolateAttributes(UniformData uniform, TriangleBuffer* triangle, int32 offset)
     {
-        Derived<T>::interpolateAttributes_implementation<mode>(uniform, triangle, offset);
+        Derived<T>::template interpolateAttributes_implementation<mode>(uniform, triangle, offset);
     }
 
     static ShaderOutput computeColor(UniformData uniform, TriangleBuffer* triangle)
