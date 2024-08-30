@@ -315,9 +315,6 @@ void Renderer<T, t_cfg, ShaderProgram>::processVertices(const ModelData* model)
     for (uint16 vertex_idx = 0; vertex_idx < model->num_vertices; ++vertex_idx) {
         const VertexData vertex_data = {model->vertices + vertex_idx, vertex_buffers + vertex_idx};
 
-        // Transform vertex.
-        shader_program.transformVertex(vertex_data);
-
         // Shade vertex.
         shader_program.shadeVertex(vertex_data);
 

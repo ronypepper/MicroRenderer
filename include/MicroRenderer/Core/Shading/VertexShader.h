@@ -13,10 +13,6 @@ class BaseVertexShader
 public:
     USE_SHADER_INTERFACE(Interface<T>);
 
-    static void transformVertex(UniformData uniform, VertexData vertex)
-    {
-        Derived<T>::transformVertex_implementation(uniform, vertex);
-    }
     static void shadeVertex(UniformData uniform, VertexData vertex)
     {
         Derived<T>::shadeVertex_implementation(uniform, vertex);

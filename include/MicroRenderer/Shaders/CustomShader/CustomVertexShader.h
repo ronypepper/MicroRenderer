@@ -14,11 +14,6 @@ class CustomVertexShader : public BaseVertexShader<T, CustomShaderInterface, Cus
 public:
     USE_SHADER_INTERFACE(CustomShaderInterface<T>);
 
-    static void transformVertex_implementation(UniformData uniform, VertexData vertex)
-    {
-        // Implement here.
-    }
-
     static void shadeVertex_implementation(UniformData uniform, VertexData vertex)
     {
         // Implement here.

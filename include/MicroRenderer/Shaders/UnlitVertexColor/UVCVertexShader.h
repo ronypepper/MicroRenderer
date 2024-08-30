@@ -14,7 +14,7 @@ class UVCVertexShader : public BaseVertexShader<T, UVCShaderInterface, UVCVertex
 public:
     USE_SHADER_INTERFACE(UVCShaderInterface<T>);
 
-    static void transformVertex_implementation(UniformData uniform, VertexData vertex)
+    static void shadeVertex_implementation(UniformData uniform, VertexData vertex)
     {
         // auto global = uniform.global;
         // auto instance = uniform.instance;
@@ -22,11 +22,6 @@ public:
         // auto buffer = vertex.buffer;
         //vertex.buffer->screen_position = (uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)}).getXYZ();
         vertex.buffer->clip_position = uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)};
-    }
-
-    static void shadeVertex_implementation(UniformData uniform, VertexData vertex)
-    {
-        // Implement here.
     }
 };
 

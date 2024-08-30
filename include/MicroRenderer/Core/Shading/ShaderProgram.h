@@ -95,11 +95,6 @@ public:
         inv_near_plane = static_cast<T>(1.0) / distance;
     }
 
-    void transformVertex(VertexData vertex)
-    {
-        VertexShader<T>::transformVertex(uniform_data, vertex);
-    }
-
     void shadeVertex(VertexData vertex)
     {
         VertexShader<T>::shadeVertex(uniform_data, vertex);
