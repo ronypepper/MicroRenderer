@@ -71,17 +71,29 @@ template<IncrementationMode mode, typename Attribute>
 void incrementAttributes(Attribute& attr, const AttributeIncrements<Attribute>& attr_incs, int32 offset = 1)
 {
     if constexpr(mode == IncrementationMode::OneInX) {
-        attr += attr_incs.x;
+        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.x));
     }
     else if constexpr(mode == IncrementationMode::OneInY) {
-        attr += attr_incs.y;
+        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.y));
     }
     else if constexpr(mode == IncrementationMode::OffsetInX) {
-        attr += attr_incs.x * offset;
+        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.x) * static_cast<double>(offset));
     }
     else if constexpr(mode == IncrementationMode::OffsetInY) {
-        attr += attr_incs.y * offset;
+        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.y) * static_cast<double>(offset));
     }
+    // if constexpr(mode == IncrementationMode::OneInX) {
+    //     attr += attr_incs.x;
+    // }
+    // else if constexpr(mode == IncrementationMode::OneInY) {
+    //     attr += attr_incs.y;
+    // }
+    // else if constexpr(mode == IncrementationMode::OffsetInX) {
+    //     attr += attr_incs.x * static_cast<float>(offset);
+    // }
+    // else if constexpr(mode == IncrementationMode::OffsetInY) {
+    //     attr += attr_incs.y * static_cast<float>(offset);
+    // }
 }
 
 } // namespace MicroRenderer
