@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Shaders/UnlitVertexColor/UVCShaderInterface.h"
 
 namespace MicroRenderer {
