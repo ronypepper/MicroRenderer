@@ -87,27 +87,27 @@ struct TextureInternal<FORMAT_DEPTH, T>
 };
 
 
-template<TextureExternalType external_type>
+template<TextureExternalType external_type, typename T>
 struct TextureExternal
 {
 };
 
-template<>
-struct TextureExternal<TYPE_INTEGER>
+template<typename T>
+struct TextureExternal<TYPE_INTEGER, T>
 {
     using type = uint32;
 };
 
-template<>
-struct TextureExternal<TYPE_DECIMAL>
+template<typename T>
+struct TextureExternal<TYPE_DECIMAL, T>
 {
-    using type = float;
+    using type = T;
 };
 
-template<>
-struct TextureExternal<TYPE_NORMALIZED>
+template<typename T>
+struct TextureExternal<TYPE_NORMALIZED, T>
 {
-    using type = float;
+    using type = T;
 };
 
 } // namespace MicroRenderer

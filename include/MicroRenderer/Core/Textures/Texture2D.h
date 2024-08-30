@@ -21,7 +21,7 @@ class Texture2D
     static_assert(t_cfg.wrapmode < NUM_WRAPMODES, "Invalid wrapmode in texture configuration!");
 public:
     // Representation of texture values in memory.
-    // I.e. Vectorx<uint8>, uint8, Vectorx<float>, float, uint16 ...
+    // I.e. Vectorx<uint8>, uint8, Vectorx<T>, T, uint16 ...
     using InternalType = typename TextureInternal<t_cfg.format, T>::InternalType;
 
     // Intermediate representation of texture values in methods after reading from / before writing to texture.
@@ -29,8 +29,8 @@ public:
     using WorkingType = typename TextureInternal<t_cfg.format, T>::template PixelType<uint32>;
 
     // Representation of texture values in Texture2D's methods.
-    // One of Vectorx<uint32>, Vectorx<float>, uint32, float
-    using ExternalValue = typename TextureExternal<t_cfg.type>::type;
+    // One of Vectorx<uint32>, Vectorx<T>, uint32, T
+    using ExternalValue = typename TextureExternal<t_cfg.type, T>::type;
     using ExternalType = typename TextureInternal<t_cfg.format, T>::template PixelType<ExternalValue>;
 
     using BufferPointer = std::conditional_t<t_cfg.access == ACCESS_READWRITE, InternalType*, const InternalType*>;
@@ -42,9 +42,13 @@ public:
 
     Texture2D() = default;
 
-    Texture2D(BufferPointer address, int32 width, int32 height);
+    Texture2D(const void* address, int32 width, int32 height) requires(t_cfg.access == ACCESS_READONLY);
 
-    void setBuffer(BufferPointer address);
+    Texture2D(void* address, int32 width, int32 height) requires(t_cfg.access == ACCESS_READWRITE);
+
+    void setBuffer(const void* address) requires(t_cfg.access == ACCESS_READONLY);
+
+    void setBuffer(void* address) requires(t_cfg.access == ACCESS_READWRITE);
 
     void setResolution(int32 width, int32 height);
 
@@ -78,7 +82,7 @@ public:
 
     ExternalType samplePixelAt(Vector2<T> uv) const;
 
-    void saveToPPMImage(const std::string& file_name) const;
+    bool saveToPPMImage(const std::string& file_name) const;
 
     bool verifyBufferPosition(BufferPosition position) const;
 private:

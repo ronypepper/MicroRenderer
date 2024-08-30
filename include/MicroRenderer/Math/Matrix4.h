@@ -58,6 +58,16 @@ public:
         columns[3] = other.columns[3];
     }
 
+    // Conversion operator.
+    template<typename U>
+    explicit constexpr operator Matrix4<U>() const
+    {
+        return {
+            static_cast<Vector4<U>>(columns[0]), static_cast<Vector4<U>>(columns[1]),
+            static_cast<Vector4<U>>(columns[2]), static_cast<Vector4<U>>(columns[3])
+        };
+    }
+
     // Assignment operator.
     Matrix4& operator=(const Matrix4& other) {
         columns[0] = other.columns[0];

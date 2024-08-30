@@ -18,21 +18,21 @@ public:
     static void interpolateAttributes_implementation(UniformData uniform, TriangleBuffer* triangle, int32 offset)
     {
         // Interpolate vertex color.
-        incrementAttributes<mode>(triangle->color, triangle->color_incs, offset);
+        triangle->color.increment<mode>(offset);
 
         // Interpolate uv coordinates.
-        incrementAttributes<mode>(triangle->uv, triangle->uv_incs, offset);
+        triangle->uv.increment<mode>(offset);
     }
 
     static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
         // Vertex color.
-        //return triangle->color;
+        //return (triangle->color + Vector3<T>(1.f)) * static_cast<T>(0.5);
 
         // Texture.
-        auto color = uniform.instance->texture_color.samplePixelAt(triangle->uv);
-        return {color.g, color.b, 1.f, color.r};
-        //return uniform.instance->texture_color.samplePixelAt(triangle->uv);
+        auto color = uniform.instance->texture_color.samplePixelAt(static_cast<Vector2<T>>(triangle->uv.getValue()));
+        //return {color.g, color.b, 1.f, color.r};
+        return uniform.instance->texture_color.samplePixelAt(static_cast<Vector2<T>>(triangle->uv.getValue()));
     }
 };
 

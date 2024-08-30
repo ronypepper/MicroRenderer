@@ -12,7 +12,7 @@
 
 namespace MicroRenderer {
 
-constexpr ShaderOutput uvc_shader_output = {FORMAT_RGBA4444, TYPE_NORMALIZED};
+constexpr ShaderOutput uvc_shader_output = {FORMAT_RGB888, TYPE_NORMALIZED};
 
 template<typename T>
 struct UVCGlobalData
@@ -42,10 +42,8 @@ struct UVCVertexBuffer : BasePerspectiveVertexBuffer<T>
 template<typename T>
 struct UVCTriangleBuffer : BaseDepthTriangleBuffer<T>
 {
-    Vector3<T> color;
-    Vector2<T> uv;
-    AttributeIncrements<Vector3<T>> color_incs;
-    AttributeIncrements<Vector2<T>> uv_incs;
+    TriangleAttribute<T, Vector3<T>> color;
+    TriangleAttribute<T, Vector2<T>> uv;
 };
 
 template<typename T>

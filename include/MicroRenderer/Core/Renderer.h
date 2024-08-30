@@ -12,6 +12,22 @@
 
 namespace MicroRenderer {
 
+// POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
+// enum RenderDataType : uint32
+// {
+//     FLOATING_POINT,
+//     FIXED_POINT,
+//     NUM_RENDER_DATA_TYPES
+// };
+//
+// enum PrecisionMode : uint32
+// {
+//     HALF_PRECISION,
+//     MIXED_PRECISION,
+//     FULL_PRECISION,
+//     NUM_PRECISION_MODES
+// };
+
 enum RenderMode : uint32
 {
     FRAMEBUFFER,
@@ -28,15 +44,20 @@ enum FrontFace : uint32
 
 struct RendererConfiguration
 {
+    // RenderDataType data_type; POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
+    // PrecisionMode precision; POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
     RenderMode render_mode;
     FrontFace front_face;
 };
 
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
 class Renderer {
+    //static_assert(t_cfg.data_type < NUM_RENDER_DATA_TYPES, "Renderer: Invalid render data type in configuration!"); POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
+    //static_assert(t_cfg.precision < NUM_PRECISION_MODES, "Renderer: Invalid precision mode in configuration!"); POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
     static_assert(t_cfg.render_mode < NUM_RENDER_MODES, "Renderer: Invalid render mode in configuration!");
     static_assert(t_cfg.front_face < NUM_FRONT_FACE_MODES, "Renderer: Invalid front face mode in configuration!");
 public:
+    //using T = std::conditional_t<t_cfg.data_type == FLOATING_POINT, float, void>; POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
     USE_SHADER_INTERFACE(ShaderProgram<T>::ShaderInterface);
     static constexpr ShaderProgramConfig shader_cfg = ShaderProgram<T>::configuration;
     static constexpr TextureConfig framebuffer_cfg = {

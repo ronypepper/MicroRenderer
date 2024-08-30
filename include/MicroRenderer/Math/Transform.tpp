@@ -31,7 +31,7 @@ Matrix4<T> Transform::rotationRadians(const Vector3<T> &rotation) {
         cos_y * cos_z, cos_y * sin_z, -sin_y, 0,
         sin_x * sin_y * cos_z - cos_x * sin_z, sin_x * sin_y * sin_z + cos_x * cos_z, sin_x * cos_y, 0,
         cos_x * sin_y * cos_z + sin_x * sin_z, cos_x * sin_y * sin_z - sin_x * cos_z, cos_x * cos_y, 0,
-        0, 0, 0, 1
+        0, 0, 0, static_cast<T>(1.0)
     };
 }
 
@@ -46,7 +46,7 @@ Matrix4<T> Transform::scale(const Vector3<T> &scale) {
         scale.x, 0, 0, 0,
         0, scale.y, 0, 0,
         0, 0, scale.z, 0,
-        0, 0, 0, 1
+        0, 0, 0, static_cast<T>(1.0)
     };
 }
 
@@ -59,7 +59,7 @@ Matrix4<T> Transform::camera(const Vector3<T> &eye, const Vector3<T> &view_direc
         u.x, v.x, w.x, 0,
         u.y, v.y, w.y, 0,
         u.z, v.z, w.z, 0,
-        -eye.dot(u), -eye.dot(v), -eye.dot(w), 1
+        -eye.dot(u), -eye.dot(v), -eye.dot(w), static_cast<T>(1.0)
     };
 }
 
@@ -82,9 +82,9 @@ Matrix4<T> Transform::orthographicProjection(T left, T right, T bottom, T top, T
 template<typename T>
 Matrix4<T> Transform::perspectiveProjection(T left, T right, T bottom, T top, T near, T far) {
     return Matrix4<T>{
-        2 * near / (right - left), 0, 0, 0,
-        0, 2 * near / (top - bottom), 0, 0,
-        (right + left) / (left - right), (top + bottom) / (bottom - top), far / (far - near), 1,
+        static_cast<T>(2.0) * near / (right - left), 0, 0, 0,
+        0, static_cast<T>(2.0) * near / (top - bottom), 0, 0,
+        (right + left) / (left - right), (top + bottom) / (bottom - top), far / (far - near), static_cast<T>(1.0),
         0, 0, far * near / (near - far), 0
     };
 }
@@ -115,8 +115,8 @@ Matrix4<T> Transform::viewport(uint32 viewport_width, uint32 viewport_height, bo
     return Matrix4<T>{
         cast_width * factor_x, 0, 0, 0,
         0, cast_height * factor_y, 0, 0,
-        0, 0, 1, 0,
-        (cast_width - static_cast<T>(1.0)) * static_cast<T>(0.5), (cast_height - static_cast<T>(1.0)) * static_cast<T>(0.5), 0, 1
+        0, 0, static_cast<T>(1.0), 0,
+        (cast_width - static_cast<T>(1.0)) * static_cast<T>(0.5), (cast_height - static_cast<T>(1.0)) * static_cast<T>(0.5), 0, static_cast<T>(1.0)
     };
 }
 

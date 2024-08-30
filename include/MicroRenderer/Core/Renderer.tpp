@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-
 #include "MicroRenderer/Math/Vector2.h"
 #include "MicroRenderer/Core/Shading/ShaderProgram.h"
 
@@ -16,7 +15,7 @@ namespace MicroRenderer {
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setFramebuffer(void* address) requires(shader_cfg.shading == SHADING_ENABLED)
 {
-    framebuffer.setBuffer(static_cast<typename Framebuffer::BufferPointer>(address));
+    framebuffer.setBuffer(address);
 }
 
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
@@ -28,7 +27,7 @@ typename Renderer<T, t_cfg, ShaderProgram>::Framebuffer& Renderer<T, t_cfg, Shad
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setDepthbuffer(void* address) requires(shader_cfg.depth_test == DEPTH_TEST_ENABLED)
 {
-    depthbuffer.setBuffer(static_cast<typename Depthbuffer::BufferPointer>(address));
+    depthbuffer.setBuffer(address);
 }
 
 template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
@@ -535,7 +534,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
             const T y_end = positions[end_idx]->y;
             const T y_middle = positions[middle_idx]->y;
             rasterization.y_halftri_end = static_cast<int16>(std::floor(y_middle));
-            if (rasterization.y_halftri_end < height_minus_one) {
+            if (rasterization.y_halftri_end < static_cast<int16>(height_minus_one)) {
                 // Draw both half-triangles.
                 rasterization.y_fulltri_end = static_cast<int16>(std::floor(y_end));
 
@@ -579,7 +578,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
     // Check cases that half-triangles do not even cover one scanline.
     // This may happen due to the rounding logic above, but the difference is always only one scanline.
     // It is important this is done after the above adjustment of edge positions.
-    if (start_scanline > rasterization.y_halftri_end) {
+    if (start_scanline > static_cast<int32>(rasterization.y_halftri_end)) {
         // Upper half-triangle does not even cover one scanline.
         if (rasterization.y_halftri_end == rasterization.y_fulltri_end) {
             // Only one half-triangle at all or two half-triangles that both do not even cover one scanline.
@@ -617,7 +616,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
                 // Left is middle.
                 rasterization.left_x = rasterization.last_x;
                 rasterization.left_dx_per_dy = rasterization.last_dx_per_dy;
-                rasterization.left_x -= rasterization.left_dx_per_dy * static_cast<float>(rasterization.y_halftri_end + 1);
+                rasterization.left_x -= rasterization.left_dx_per_dy * static_cast<T>(rasterization.y_halftri_end + 1);
                 rasterization.right_x -= rasterization.right_dx_per_dy * first_scanline;
             }
             else {
@@ -625,7 +624,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
                 rasterization.right_x = rasterization.last_x;
                 rasterization.right_dx_per_dy = rasterization.last_dx_per_dy;
                 rasterization.left_x -= rasterization.left_dx_per_dy * first_scanline;
-                rasterization.right_x -= rasterization.right_dx_per_dy * static_cast<float>(rasterization.y_halftri_end + 1);
+                rasterization.right_x -= rasterization.right_dx_per_dy * static_cast<T>(rasterization.y_halftri_end + 1);
             }
             rasterization.y_halftri_end = rasterization.y_fulltri_end;
         }
@@ -641,7 +640,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
     }
 
     // Setup triangle and store initial interpolation position (prev_scanline_stop_x and start_scanline).
-    rasterization.prev_scanline_stop_x = static_cast<int32>(std::floor(rasterization.right_x));
+    rasterization.prev_scanline_stop_x = static_cast<int16>(std::floor(rasterization.right_x));
     shader_program.setupTriangle(vertex_1, vertex_2, vertex_3, &rasterization.triangle_buffer,
                                  rasterization.prev_scanline_stop_x, start_scanline);
 
@@ -671,7 +670,8 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
     const int32 x_stop = std::min(static_cast<int32>(std::floor(rasterization.right_x)), width_minus_one);
     if (x_start <= x_stop) {
         // Interpolate in x to first pixel on scanline.
-        shader_program.template interpolateAttributes<IncrementationMode::OffsetInX>(triangle, x_start - rasterization.prev_scanline_stop_x);
+        int32 initial_offset = x_start - static_cast<int32>(rasterization.prev_scanline_stop_x);
+        shader_program.template interpolateAttributes<IncrementationMode::OffsetInX>(triangle, initial_offset);
 
         // Store end of scanline for interpolation in x at next scanline.
         rasterization.prev_scanline_stop_x = x_stop;
@@ -679,14 +679,14 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
         // Perform depth-test and shading of pixels on scanline, if enabled.
         if constexpr(shader_cfg.shading == SHADING_DISABLED && shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
             auto depthbuffer_position = getPositionInBuffer(depthbuffer, x_start, scanline);
-            if (triangle->depth < depthbuffer.readPixelAt(depthbuffer_position)) {
-                depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth);
+            if (triangle->depth.getValue() > depthbuffer.readPixelAt(depthbuffer_position)) {
+                depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth.getValue());
             }
             for (int32 x = x_start; x < x_stop; ++x) {
                 shader_program.template interpolateAttributes<IncrementationMode::OneInX>(triangle);
                 depthbuffer.moveBufferPositionRight(depthbuffer_position);
-                if (triangle->depth < depthbuffer.readPixelAt(depthbuffer_position)) {
-                    depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth);
+                if (triangle->depth.getValue() > depthbuffer.readPixelAt(depthbuffer_position)) {
+                    depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth.getValue());
                 }
             }
         }
@@ -702,16 +702,16 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
         else if constexpr(shader_cfg.shading == SHADING_ENABLED && shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
             auto framebuffer_position = getPositionInBuffer(framebuffer, x_start, scanline);
             auto depthbuffer_position = getPositionInBuffer(depthbuffer, x_start, scanline);
-            if (triangle->depth < depthbuffer.readPixelAt(depthbuffer_position)) {
-                depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth);
+            if (triangle->depth.getValue() > depthbuffer.readPixelAt(depthbuffer_position)) {
+                depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth.getValue());
                 framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
             }
             for (int32 x = x_start; x < x_stop; ++x) {
                 shader_program.template interpolateAttributes<IncrementationMode::OneInX>(triangle);
                 framebuffer.moveBufferPositionRight(framebuffer_position);
                 depthbuffer.moveBufferPositionRight(depthbuffer_position);
-                if (triangle->depth < depthbuffer.readPixelAt(depthbuffer_position)) {
-                    depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth);
+                if (triangle->depth.getValue() > depthbuffer.readPixelAt(depthbuffer_position)) {
+                    depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth.getValue());
                     framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
                 }
             }

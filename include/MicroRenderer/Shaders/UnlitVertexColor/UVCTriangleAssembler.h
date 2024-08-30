@@ -26,15 +26,13 @@ public:
                                              VertexData vertex_3, TriangleBuffer* triangle, Vector2<T> v1_offset,
                                              const BarycentricIncrements<T>& bc_incs)
     {
-        // Compute start vertex color and increments.
-        computeAttributeIncrements(vertex_1.source->color, vertex_2.source->color, vertex_3.source->color, bc_incs,
-                                   triangle->color_incs);
-        triangle->color = computeAttributeAt(vertex_1.source->color, triangle->color_incs, v1_offset);
+        // Setup interpolation of vertex color over triangle.
+        triangle->color.initialize(vertex_1.source->color, vertex_2.source->color, vertex_3.source->color, bc_incs,
+                                   v1_offset);
 
-        // Compute start uv coordinates and increments.
-        computeAttributeIncrements(vertex_1.source->uv_coordinates, vertex_2.source->uv_coordinates,
-                                   vertex_3.source->uv_coordinates, bc_incs, triangle->uv_incs);
-        triangle->uv = computeAttributeAt(vertex_1.source->uv_coordinates, triangle->uv_incs, v1_offset);
+        // Setup interpolation of uv coordinates over triangle.
+        triangle->uv.initialize(vertex_1.source->uv_coordinates, vertex_2.source->uv_coordinates,
+                                vertex_3.source->uv_coordinates, bc_incs, v1_offset);
     }
 };
 

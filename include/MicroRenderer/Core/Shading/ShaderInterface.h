@@ -27,8 +27,7 @@ struct BasePerspectiveVertexBuffer
 template<typename T>
 struct BaseDepthTriangleBuffer
 {
-    T depth;
-    AttributeIncrements<T> depth_incs;
+    TriangleAttribute<T, T> depth;
 };
 
 struct ShaderOutput
@@ -50,7 +49,7 @@ class BaseShaderInterface
 {
     // Deduce return type of fragment shader's computeColor method. ShaderOutput becomes equal to a Texture2D's
     // ExternalType with same TextureInternalFormat and TextureExternalType configuration.
-    using ExternalValue = typename TextureExternal<output.type>::type;
+    using ExternalValue = typename TextureExternal<output.type, T>::type;
     using ExternalType = typename TextureInternal<output.format, T>::template PixelType<ExternalValue>;
 public:
     static constexpr ShaderOutput shader_output = output;

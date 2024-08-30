@@ -3,7 +3,6 @@
 //
 
 #pragma once
-#include <variant>
 #include "MicroRenderer/Core/Shading/ShaderInterface.h"
 #include "MicroRenderer/Math/Interpolation.h"
 #include "MicroRenderer/Math/Vector3.h"
@@ -143,9 +142,11 @@ public:
         const Vector2<T> v1_offset = {start_x - pos_1.x, start_y - pos_1.y};
 
         if constexpr(t_cfg.depth_test == DEPTH_TEST_ENABLED) {
-            // Compute start depth and increments.
-            computeAttributeIncrements(pos_1.z, pos_2.z, pos_3.z, bc_incs, triangle->depth_incs);
-            triangle->depth = computeAttributeAt(pos_1.z, triangle->depth_incs, v1_offset);
+            // Setup interpolation of depth (reversed-z) over triangle.
+            const T rev_z_1 = static_cast<T>(1.0) - pos_1.z;
+            const T rev_z_2 = static_cast<T>(1.0) - pos_2.z;
+            const T rev_z_3 = static_cast<T>(1.0) - pos_3.z;
+            triangle->depth.initialize(rev_z_1, rev_z_2, rev_z_3, bc_incs, v1_offset);
         }
 
         TriangleAssembler<T>::setupTriangle(uniform_data, vertex_1, vertex_2, vertex_3, triangle, v1_offset, bc_incs);
@@ -156,7 +157,7 @@ public:
     {
         if constexpr(t_cfg.depth_test == DEPTH_TEST_ENABLED) {
             // Interpolate depth.
-            incrementAttributes<mode>(triangle->depth, triangle->depth_incs, offset);
+            triangle->depth.increment<mode>(offset);
         }
 
         FragmentShader<T>::template interpolateAttributes<mode>(uniform_data, triangle, offset);

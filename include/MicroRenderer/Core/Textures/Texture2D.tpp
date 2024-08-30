@@ -3,27 +3,37 @@
 //
 
 #pragma once
-#include <algorithm>
-
 #include "Texture2D.h"
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 
-#include "Texture2D.h"
-
 namespace MicroRenderer {
 
-    template<typename T, TextureConfig t_cfg>
-    Texture2D<T, t_cfg>::Texture2D(BufferPointer address, int32 width, int32 height)
+    template <typename T, TextureConfig t_cfg>
+    Texture2D<T, t_cfg>::Texture2D(const void* address, int32 width, int32 height) requires (t_cfg.access == ACCESS_READONLY)
     {
         setBuffer(address);
         setResolution(width, height);
     }
 
-    template<typename T, TextureConfig t_cfg>
-    void Texture2D<T, t_cfg>::setBuffer(BufferPointer address)
+    template <typename T, TextureConfig t_cfg>
+    Texture2D<T, t_cfg>::Texture2D(void* address, int32 width, int32 height) requires (t_cfg.access == ACCESS_READWRITE)
     {
-        buffer = address;
+        setBuffer(address);
+        setResolution(width, height);
+    }
+
+    template <typename T, TextureConfig t_cfg>
+    void Texture2D<T, t_cfg>::setBuffer(const void* address) requires (t_cfg.access == ACCESS_READONLY)
+    {
+        buffer = reinterpret_cast<BufferPointer>(address);
+    }
+
+    template <typename T, TextureConfig t_cfg>
+    void Texture2D<T, t_cfg>::setBuffer(void* address) requires (t_cfg.access == ACCESS_READWRITE)
+    {
+        buffer = reinterpret_cast<BufferPointer>(address);
     }
 
     template <typename T, TextureConfig t_cfg>
@@ -314,17 +324,17 @@ namespace MicroRenderer {
     }
 
     template<typename T, TextureConfig t_cfg>
-    void Texture2D<T, t_cfg>::saveToPPMImage(const std::string& file_name) const
+    bool Texture2D<T, t_cfg>::saveToPPMImage(const std::string& file_name) const
     {
         // Check parameters and open file.
         if (!buffer || texture_width < 1 || texture_height < 1 || texture_width > 5000 || texture_height > 5000) {
             assert(false && "Invalid parameters when trying to save framebuffer to ppm file!");
-            return;
+            return false;
         }
-        std::ofstream file(file_name + ".ppm" , std::ios_base::out | std::ios_base::binary);
+        std::ofstream file(file_name + ".ppm", std::ios_base::out | std::ios_base::binary);
         if (!file.is_open()) {
             assert(false && "Image file could not be opened!");
-            return;
+            return false;
         }
 
         // Insert ppm image header into file stream, based on texture format.
@@ -407,6 +417,7 @@ namespace MicroRenderer {
                 }
             }
         }
+        return true;
     }
 
     template<typename T, TextureConfig t_cfg>

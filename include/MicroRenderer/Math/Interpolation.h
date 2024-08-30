@@ -25,13 +25,6 @@ struct BarycentricIncrements
     Vector2<T> gamma;
 };
 
-template<typename Attribute>
-struct AttributeIncrements
-{
-    Attribute x;
-    Attribute y;
-};
-
 template<typename T>
 void computeBarycentricIncrements(const Vector2<T>& pos_1, const Vector2<T>& pos_2, const Vector2<T>& pos_3,
                                   BarycentricIncrements<T>& bc_incs)
@@ -44,21 +37,6 @@ void computeBarycentricIncrements(const Vector2<T>& pos_1, const Vector2<T>& pos
     bc_incs.gamma = {(pos_1.y - pos_2.y) / gamma_signed_dist, (pos_2.x - pos_1.x) / gamma_signed_dist};
 }
 
-template<typename T, typename Attribute>
-void computeAttributeIncrements(const Attribute& attr_1, const Attribute& attr_2, const Attribute& attr_3,
-                                const BarycentricIncrements<T>& bc_incs, AttributeIncrements<Attribute>& attr_incs)
-{
-    attr_incs.x = attr_1 * bc_incs.alpha.x + attr_2 * bc_incs.beta.x + attr_3 * bc_incs.gamma.x;
-    attr_incs.y = attr_1 * bc_incs.alpha.y + attr_2 * bc_incs.beta.y + attr_3 * bc_incs.gamma.y;
-}
-
-template<typename T, typename Attribute>
-Attribute computeAttributeAt(const Attribute& attr, const AttributeIncrements<Attribute>& attr_incs,
-                             const Vector2<T>& offset)
-{
-    return attr + attr_incs.x * offset.x + attr_incs.y * offset.y;
-}
-
 enum class IncrementationMode : uint32
 {
     OneInX,
@@ -67,33 +45,92 @@ enum class IncrementationMode : uint32
     OffsetInY
 };
 
-template<IncrementationMode mode, typename Attribute>
-void incrementAttributes(Attribute& attr, const AttributeIncrements<Attribute>& attr_incs, int32 offset = 1)
+template<typename T, typename AttrType>
+class TriangleAttribute
 {
-    if constexpr(mode == IncrementationMode::OneInX) {
-        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.x));
+public:
+    void initialize(const AttrType& v1, const AttrType& v2, const AttrType& v3, const BarycentricIncrements<T>& bc_incs,
+                    const Vector2<T>& offset)
+    {
+        increment_x = v1 * bc_incs.alpha.x + v2 * bc_incs.beta.x + v3 * bc_incs.gamma.x;
+        increment_y = v1 * bc_incs.alpha.y + v2 * bc_incs.beta.y + v3 * bc_incs.gamma.y;
+        current_value = v1 + increment_x * offset.x + increment_y * offset.y;
     }
-    else if constexpr(mode == IncrementationMode::OneInY) {
-        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.y));
+
+    AttrType getValue()
+    {
+        return current_value;
     }
-    else if constexpr(mode == IncrementationMode::OffsetInX) {
-        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.x) * static_cast<double>(offset));
+
+    template<IncrementationMode mode>
+    void increment(int32 offset = 1)
+    {
+        if constexpr(mode == IncrementationMode::OneInX) {
+            current_value += increment_x;
+        }
+        else if constexpr(mode == IncrementationMode::OneInY) {
+            current_value += increment_y;
+        }
+        else if constexpr(mode == IncrementationMode::OffsetInX) {
+            current_value += increment_x * static_cast<T>(offset);
+        }
+        else if constexpr(mode == IncrementationMode::OffsetInY) {
+            current_value += increment_y * static_cast<T>(offset);
+        }
     }
-    else if constexpr(mode == IncrementationMode::OffsetInY) {
-        attr = static_cast<float>(static_cast<double>(attr) + static_cast<double>(attr_incs.y) * static_cast<double>(offset));
-    }
-    // if constexpr(mode == IncrementationMode::OneInX) {
-    //     attr += attr_incs.x;
-    // }
-    // else if constexpr(mode == IncrementationMode::OneInY) {
-    //     attr += attr_incs.y;
-    // }
-    // else if constexpr(mode == IncrementationMode::OffsetInX) {
-    //     attr += attr_incs.x * static_cast<float>(offset);
-    // }
-    // else if constexpr(mode == IncrementationMode::OffsetInY) {
-    //     attr += attr_incs.y * static_cast<float>(offset);
-    // }
-}
+private:
+    AttrType current_value;
+    AttrType increment_x;
+    AttrType increment_y;
+};
+
+// template<typename SourceType, typename WorkType> POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
+// class TriangleAttribute
+// {
+// public:
+//     enum class IncrementationMode : uint32
+//     {
+//         OneInX,
+//         OneInY,
+//         OffsetInX,
+//         OffsetInY
+//     };
+//
+//     TriangleAttribute(const SourceType& v1, const SourceType& v2, const SourceType& v3,
+//                       const BarycentricIncrements<WorkType>& bc_incs, const Vector2<WorkType>& offset)
+//     {
+//         increment_x = static_cast<WorkType>(v1) * bc_incs.alpha.x + static_cast<WorkType>(v2) * bc_incs.beta.x +
+//                       static_cast<WorkType>(v3) * bc_incs.gamma.x;
+//         increment_y = static_cast<WorkType>(v1) * bc_incs.alpha.y + static_cast<WorkType>(v2) * bc_incs.beta.y +
+//                       static_cast<WorkType>(v3) * bc_incs.gamma.y;
+//         current_value = static_cast<WorkType>(v1) + increment_x * offset.x + increment_y * offset.y;
+//     }
+//
+//     SourceType getValue()
+//     {
+//         return static_cast<SourceType>(current_value);
+//     }
+//
+//     template<IncrementationMode mode>
+//     void increment(int32 offset = 1)
+//     {
+//         if constexpr(mode == IncrementationMode::OneInX) {
+//             current_value += increment_x;
+//         }
+//         else if constexpr(mode == IncrementationMode::OneInY) {
+//             current_value += increment_y;
+//         }
+//         else if constexpr(mode == IncrementationMode::OffsetInX) {
+//             current_value += increment_x * static_cast<WorkType>(offset);
+//         }
+//         else if constexpr(mode == IncrementationMode::OffsetInY) {
+//             current_value += increment_y * static_cast<WorkType>(offset);
+//         }
+//     }
+// private:
+//     WorkType current_value;
+//     WorkType increment_x;
+//     WorkType increment_y;
+// };
 
 } // namespace MicroRenderer
