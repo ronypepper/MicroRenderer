@@ -7,15 +7,17 @@
 
 namespace MicroRenderer {
 
-template<typename T, template <typename> class Interface, template <typename> class Derived>
+template<typename T, ShaderConfiguration t_cfg, template <typename, ShaderConfiguration> class Interface,
+         template <typename, ShaderConfiguration> class Derived>
 class BaseVertexShader
 {
 public:
-    USE_SHADER_INTERFACE(Interface<T>);
+    using ShaderInterface_type = Interface<T, t_cfg>;
+    USE_SHADER_INTERFACE(ShaderInterface_type);
 
     static void shadeVertex(UniformData uniform, VertexData vertex)
     {
-        Derived<T>::shadeVertex_implementation(uniform, vertex);
+        Derived<T, t_cfg>::shadeVertex_implementation(uniform, vertex);
     }
 };
 

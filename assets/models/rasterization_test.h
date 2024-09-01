@@ -4,12 +4,12 @@
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
-#include "MicroRenderer/Shaders/UnlitVertexColor/UVCShaderInterface.h"
+#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
 
 namespace MicroRenderer {
 
 constexpr uint32 rasterization_test_vertex_num = 84;
-inline UVCVertexSource<float> rasterization_test_vertex_source[rasterization_test_vertex_num] = {
+inline FlatSimpleSunVertexSource<float> rasterization_test_vertex_source[rasterization_test_vertex_num] = {
     {{100.f, 50.f, 0.5f}, {0.f, 1.f, 0.f}},
     {{50.f, -50.f, 0.5f}, {0.f, 0.f, 1.f}},
     {{-100.f, 80.f, 0.5f}, {0.f, 1.f, 1.f}},
@@ -103,7 +103,7 @@ inline TriangleIndices rasterization_test_indices[rasterization_test_triangle_nu
     60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83
 };
 
-inline UVCShaderInterface<float>::ModelData rasterization_test_model = {
+inline SimpleContoursShaderInterface<float>::ModelData rasterization_test_model = {
     rasterization_test_vertex_num, rasterization_test_triangle_num, rasterization_test_vertex_source,
     rasterization_test_indices
 };

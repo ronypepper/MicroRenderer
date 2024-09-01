@@ -12,31 +12,31 @@
 
 namespace MicroRenderer {
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::setFramebuffer(void* address) requires(shader_cfg.shading == SHADING_ENABLED)
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+void Renderer<T, t_cfg, ShaderProgram>::setFramebuffer(void* address) requires(t_cfg.shader_cfg.shading == SHADING_ENABLED)
 {
     framebuffer.setBuffer(address);
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
-typename Renderer<T, t_cfg, ShaderProgram>::Framebuffer& Renderer<T, t_cfg, ShaderProgram>::getFramebuffer() requires(shader_cfg.shading == SHADING_ENABLED)
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+typename Renderer<T, t_cfg, ShaderProgram>::Framebuffer& Renderer<T, t_cfg, ShaderProgram>::getFramebuffer() requires(t_cfg.shader_cfg.shading == SHADING_ENABLED)
 {
     return framebuffer;
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::setDepthbuffer(void* address) requires(shader_cfg.depth_test == DEPTH_TEST_ENABLED)
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+void Renderer<T, t_cfg, ShaderProgram>::setDepthbuffer(void* address) requires(t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED)
 {
     depthbuffer.setBuffer(address);
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
-typename Renderer<T, t_cfg, ShaderProgram>::Depthbuffer& Renderer<T, t_cfg, ShaderProgram>::getDepthbuffer() requires(shader_cfg.depth_test == DEPTH_TEST_ENABLED)
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+typename Renderer<T, t_cfg, ShaderProgram>::Depthbuffer& Renderer<T, t_cfg, ShaderProgram>::getDepthbuffer() requires(t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED)
 {
     return depthbuffer;
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setResolution(int32 width, int32 height)
 {
     assert(width >= 0 && height >= 0);
@@ -44,10 +44,10 @@ void Renderer<T, t_cfg, ShaderProgram>::setResolution(int32 width, int32 height)
     if constexpr (t_cfg.render_mode == FRAMEBUFFER) {
         tex_height = height;
     }
-    if constexpr (shader_cfg.shading == SHADING_ENABLED) {
+    if constexpr (t_cfg.shader_cfg.shading == SHADING_ENABLED) {
         framebuffer.setResolution(width, tex_height);
     }
-    if constexpr (shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
+    if constexpr (t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
         depthbuffer.setResolution(width, tex_height);
     }
     width_minus_one = width - 1;
@@ -58,52 +58,54 @@ void Renderer<T, t_cfg, ShaderProgram>::setResolution(int32 width, int32 height)
     top_y_clip = static_cast<T>(-0.5) + static_cast<T>(height);
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::setNearPlane(T distance) requires (shader_cfg.projection == PERSPECTIVE)
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+void Renderer<T, t_cfg, ShaderProgram>::setNearPlane(T distance)
 {
-    near_plane = distance;
-    shader_program.setNearPlane(distance);
+    if constexpr (t_cfg.shader_cfg.projection == PERSPECTIVE) {
+        near_plane = distance;
+        shader_program.setNearPlane(distance);
+    }
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
-ShaderProgram<T>& Renderer<T, t_cfg, ShaderProgram>::getShaderProgram()
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+ShaderProgram<T, t_cfg.shader_cfg>& Renderer<T, t_cfg, ShaderProgram>::getShaderProgram()
 {
     return shader_program;
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setGlobalData(const GlobalData* global_data)
 {
     shader_program.setGlobalData(global_data);
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setModels(const ModelData* models)
 {
     this->models = models;
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setRenderInstructions(const RenderInstruction* instructions, uint16 number)
 {
     render_instructions = instructions;
     num_instructions = number;
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setVertexBuffers(VertexBuffer* buffers)
 {
     vertex_buffers = buffers;
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::setRasterizationBuffers(RasterizationBuffer* buffers, RasterizationOrder* order) requires(t_cfg.render_mode == SCANLINE)
 {
     scanline_render_data.buffers = buffers;
     scanline_render_data.order = order;
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T>& color)
 {
     x0 = std::clamp(x0, static_cast<T>(-0.5), right_x_clip);
@@ -113,7 +115,7 @@ void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDASafe(T x0, T y0, T x1, T
     rasterizeLineDDAUnsafe(x0, y0, x1, y1, color);
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T>& color)
 {
     // All cases of dx = 0, dy = 0, and both dx = 0 and dy = 0 are covered.
@@ -196,7 +198,7 @@ void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDAUnsafe(T x0, T y0, T x1,
     }
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::rasterizeTriangle(const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c)
 {
     // RasterizationBuffer rasterization;
@@ -209,7 +211,7 @@ void Renderer<T, t_cfg, ShaderProgram>::rasterizeTriangle(const Vector2<T>& a, c
     // }
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::render()
 {
     if constexpr (t_cfg.render_mode == SCANLINE) {
@@ -251,7 +253,7 @@ void Renderer<T, t_cfg, ShaderProgram>::render()
     }
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::renderNextScanline() requires (t_cfg.render_mode == SCANLINE)
 {
     ScanlineRenderData& data = scanline_render_data;
@@ -309,7 +311,7 @@ void Renderer<T, t_cfg, ShaderProgram>::renderNextScanline() requires (t_cfg.ren
     ++scanline_render_data.next_scanline;
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::processVertices(const ModelData* model)
 {
     for (uint16 vertex_idx = 0; vertex_idx < model->num_vertices; ++vertex_idx) {
@@ -319,18 +321,13 @@ void Renderer<T, t_cfg, ShaderProgram>::processVertices(const ModelData* model)
         shader_program.shadeVertex(vertex_data);
 
         // Homogenize vertex.
-        if constexpr(shader_cfg.projection == PERSPECTIVE) {
-            const T depth = vertex_data.buffer->clip_position.w;
-            if (depth >= near_plane) {
-                const T inverse_depth = static_cast<T>(1.0) / depth;
-                vertex_data.buffer->clip_position.w = inverse_depth;
-                vertex_data.buffer->screen_position = vertex_data.buffer->clip_position.getXYZ() * inverse_depth;
-            }
+        if constexpr(t_cfg.shader_cfg.projection == PERSPECTIVE) {
+            vertex_data.buffer->homogenizeVertex(near_plane);
         }
     }
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* model, uint16 tri_idx)
 {
     // Gather vertex data.
@@ -372,7 +369,7 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
         return outcode;
     };
 
-    if constexpr(shader_cfg.culling == CULL_AT_SCREEN_BORDER) {
+    if constexpr(t_cfg.shader_cfg.culling == CULL_AT_SCREEN_BORDER) {
         // Skip triangles if certainly invisible according to the Cohen-Sutherland algorithm (no clipping).
         if ((getCohenSutherlandOutcode(v1_screen_pos) & getCohenSutherlandOutcode(v2_screen_pos) &
             getCohenSutherlandOutcode(v3_screen_pos)) != 0) {
@@ -380,19 +377,11 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
         }
     }
 
-    if constexpr(shader_cfg.clipping == CLIP_AT_NEAR_PLANE) {
+    if constexpr(t_cfg.shader_cfg.clipping == CLIP_AT_NEAR_PLANE) {
         // Check if triangle is visible in z and clipped.
-        T v1_clip_depth, v2_clip_depth, v3_clip_depth;
-        if constexpr(shader_cfg.projection == PERSPECTIVE) {
-            v1_clip_depth = vertices[0].buffer->clip_position.z;
-            v2_clip_depth = vertices[1].buffer->clip_position.z;
-            v3_clip_depth = vertices[2].buffer->clip_position.z;
-        }
-        else {
-            v1_clip_depth = v1_screen_pos.z;
-            v2_clip_depth = v2_screen_pos.z;
-            v3_clip_depth = v3_screen_pos.z;
-        }
+        T v1_clip_depth = vertices[0].buffer->getClipPosition().z;
+        T v2_clip_depth = vertices[1].buffer->getClipPosition().z;
+        T v3_clip_depth = vertices[2].buffer->getClipPosition().z;
         const uint8 v1_z_visible = v1_clip_depth >= static_cast<T>(0.0);
         const uint8 v2_z_visible = v2_clip_depth >= static_cast<T>(0.0);
         const uint8 v3_z_visible = v3_clip_depth >= static_cast<T>(0.0);
@@ -438,7 +427,7 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
     }
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexData& vertex_1, const VertexData& vertex_2,
                                                             const VertexData& vertex_3,
                                                             RasterizationBuffer& rasterization, int32& start_scanline)
@@ -644,7 +633,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
     return true;
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 template <typename BufferType>
 typename BufferType::BufferPosition Renderer<T, t_cfg, ShaderProgram>::getPositionInBuffer(BufferType buffer, int32 x, int32 y)
 {
@@ -657,7 +646,7 @@ typename BufferType::BufferPosition Renderer<T, t_cfg, ShaderProgram>::getPositi
     return {};
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuffer& rasterization, int32 scanline)
 {
     TriangleBuffer* triangle = &rasterization.triangle_buffer;
@@ -674,7 +663,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
         rasterization.prev_scanline_stop_x = x_stop;
 
         // Perform depth-test and shading of pixels on scanline, if enabled.
-        if constexpr(shader_cfg.shading == SHADING_DISABLED && shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
+        if constexpr(t_cfg.shader_cfg.shading == SHADING_DISABLED && t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
             auto depthbuffer_position = getPositionInBuffer(depthbuffer, x_start, scanline);
             if (triangle->depth.getValue() > depthbuffer.readPixelAt(depthbuffer_position)) {
                 depthbuffer.drawPixelAt(depthbuffer_position, triangle->depth.getValue());
@@ -687,7 +676,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
                 }
             }
         }
-        else if constexpr(shader_cfg.shading == SHADING_ENABLED && shader_cfg.depth_test == DEPTH_TEST_DISABLED) {
+        else if constexpr(t_cfg.shader_cfg.shading == SHADING_ENABLED && t_cfg.shader_cfg.depth_test == DEPTH_TEST_DISABLED) {
             auto framebuffer_position = getPositionInBuffer(framebuffer, x_start, scanline);
             framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
             for (int32 x = x_start; x < x_stop; ++x) {
@@ -696,7 +685,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
                 framebuffer.drawPixelAt(framebuffer_position, shader_program.computeColor(triangle));
             }
         }
-        else if constexpr(shader_cfg.shading == SHADING_ENABLED && shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
+        else if constexpr(t_cfg.shader_cfg.shading == SHADING_ENABLED && t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED) {
             auto framebuffer_position = getPositionInBuffer(framebuffer, x_start, scanline);
             auto depthbuffer_position = getPositionInBuffer(depthbuffer, x_start, scanline);
             if (triangle->depth.getValue() > depthbuffer.readPixelAt(depthbuffer_position)) {
@@ -723,7 +712,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeScanlineOfTriangle(RasterizationBuf
     shader_program.template interpolateAttributes<IncrementationMode::OneInY>(triangle);
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::shadeFullTriangle(RasterizationBuffer& rasterization, int32 start_scanline)
 {
     // Triangle is split into first and second half-triangle, which are rasterized/shaded separately.
@@ -765,7 +754,7 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeFullTriangle(RasterizationBuffer& r
     rasterizeHalfTriangle(start_scanline);
 }
 
-template <typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::processTriangle(VertexData vertex_1, VertexData vertex_2, VertexData vertex_3)
 {
     if constexpr (t_cfg.render_mode == FRAMEBUFFER) {

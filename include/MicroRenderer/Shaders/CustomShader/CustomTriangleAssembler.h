@@ -8,11 +8,12 @@
 
 namespace MicroRenderer {
 
-template<typename T>
-class CustomTriangleAssembler : public BaseTriangleAssembler<T, CustomShaderInterface, CustomTriangleAssembler>
+template<typename T, ShaderConfiguration t_cfg>
+class CustomTriangleAssembler : public BaseTriangleAssembler<T, t_cfg, CustomShaderInterface, CustomTriangleAssembler>
 {
 public:
-    USE_SHADER_INTERFACE(CustomShaderInterface<T>);
+    using ShaderInterface_type = CustomShaderInterface<T, t_cfg>;
+    USE_SHADER_INTERFACE(ShaderInterface_type);
 
     static void interpolateVertices_implementation(UniformData uniform, VertexData from, VertexData to,
                                                    VertexSource* new_src, VertexBuffer* new_buf, T from_factor,
