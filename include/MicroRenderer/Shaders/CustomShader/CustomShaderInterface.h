@@ -7,8 +7,6 @@
 
 namespace MicroRenderer {
 
-constexpr ShaderOutput custom_shader_output = {FORMAT_RGB888, TYPE_NORMALIZED};
-
 template<typename T>
 struct CustomGlobalData
 {
@@ -27,19 +25,19 @@ struct CustomVertexSource
     // Define interface here.
 };
 
-template<typename T>
-struct CustomVertexBuffer
+template<typename T, ShaderConfiguration t_cfg>
+struct CustomVertexBuffer : BaseVertexBuffer<T, t_cfg>
 {
     // Define interface here.
 };
 
-template<typename T>
-struct CustomTriangleBuffer
+template<typename T, ShaderConfiguration t_cfg>
+struct CustomTriangleBuffer : BaseTriangleBuffer<T, t_cfg>
 {
     // Define interface here.
 };
 
-template<typename T>
-using CustomShaderInterface = BaseShaderInterface<T, custom_shader_output, CustomGlobalData, CustomInstanceData, CustomVertexSource, CustomVertexBuffer, CustomTriangleBuffer>;
+template<typename T, ShaderConfiguration t_cfg>
+using CustomShaderInterface = BaseShaderInterface<T, t_cfg, CustomGlobalData, CustomInstanceData, CustomVertexSource, CustomVertexBuffer, CustomTriangleBuffer>;
 
 } // namespace MicroRenderer

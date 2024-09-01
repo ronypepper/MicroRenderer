@@ -10,11 +10,7 @@
 
 namespace MicroRenderer {
 
-constexpr ShaderProgramConfig uvc_shader_program_config = {
-    PERSPECTIVE, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED
-};
-
-template<typename T>
-using UVCShaderProgram = BaseShaderProgram<T, uvc_shader_program_config, UVCVertexShader, UVCTriangleAssembler, UVCFragmentShader>;
+template<typename T, ShaderConfiguration t_cfg>
+using UVCShaderProgram = BaseShaderProgram<T, t_cfg, UVCVertexShader, UVCTriangleAssembler, UVCFragmentShader>;
 
 } // namespace MicroRenderer

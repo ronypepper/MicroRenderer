@@ -10,11 +10,7 @@
 
 namespace MicroRenderer {
 
-constexpr ShaderProgramConfig costum_shader_program_config = {
-    ORTHOGRAPHIC, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED
-};
-
-template<typename T>
-using CustomShaderProgram = BaseShaderProgram<T, costum_shader_program_config, CustomVertexShader, CustomTriangleAssembler, CustomFragmentShader>;
+template<typename T, ShaderConfiguration t_cfg>
+using CustomShaderProgram = BaseShaderProgram<T, t_cfg, CustomVertexShader, CustomTriangleAssembler, CustomFragmentShader>;
 
 } // namespace MicroRenderer

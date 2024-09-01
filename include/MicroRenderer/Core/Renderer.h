@@ -48,9 +48,10 @@ struct RendererConfiguration
     // PrecisionMode precision; POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
     RenderMode render_mode;
     FrontFace front_face;
+    ShaderConfiguration shader_cfg;
 };
 
-template<typename T, RendererConfiguration t_cfg, template <typename> class ShaderProgram>
+template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 class Renderer {
     //static_assert(t_cfg.data_type < NUM_RENDER_DATA_TYPES, "Renderer: Invalid render data type in configuration!"); POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
     //static_assert(t_cfg.precision < NUM_PRECISION_MODES, "Renderer: Invalid precision mode in configuration!"); POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
@@ -58,18 +59,18 @@ class Renderer {
     static_assert(t_cfg.front_face < NUM_FRONT_FACE_MODES, "Renderer: Invalid front face mode in configuration!");
 public:
     //using T = std::conditional_t<t_cfg.data_type == FLOATING_POINT, float, void>; POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
-    USE_SHADER_INTERFACE(ShaderProgram<T>::ShaderInterface);
-    static constexpr ShaderProgramConfig shader_cfg = ShaderProgram<T>::configuration;
+    using ShaderProgram_type = ShaderProgram<T, t_cfg.shader_cfg>;
+    USE_SHADER_INTERFACE(ShaderProgram_type::ShaderInterface);
     static constexpr TextureConfig framebuffer_cfg = {
-        ACCESS_READWRITE, ShaderInterface::shader_output.format, SWIZZLE_NONE, ShaderInterface::shader_output.type,
+        ACCESS_READWRITE, t_cfg.shader_cfg.output.format, SWIZZLE_NONE, t_cfg.shader_cfg.output.type,
         WRAPMODE_NONE
     };
     static constexpr TextureConfig depthbuffer_cfg = {
         ACCESS_READWRITE, FORMAT_DEPTH, SWIZZLE_NONE, TYPE_DECIMAL, WRAPMODE_NONE
     };
-    using Framebuffer = std::conditional_t<shader_cfg.shading == SHADING_ENABLED, Texture2D<T, framebuffer_cfg>, std::monostate>;
-    using Depthbuffer = std::conditional_t<shader_cfg.depth_test == DEPTH_TEST_ENABLED, Texture2D<T, depthbuffer_cfg>, std::monostate>;
-    using NearPlaneType = std::conditional_t<shader_cfg.projection == PERSPECTIVE, T, std::monostate>;
+    using Framebuffer = std::conditional_t<t_cfg.shader_cfg.shading == SHADING_ENABLED, Texture2D<T, framebuffer_cfg>, std::monostate>;
+    using Depthbuffer = std::conditional_t<t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED, Texture2D<T, depthbuffer_cfg>, std::monostate>;
+    using NearPlaneType = std::conditional_t<t_cfg.shader_cfg.projection == PERSPECTIVE, T, std::monostate>;
     struct RenderInstruction
     {
         uint16 model_idx = 0;
@@ -122,19 +123,19 @@ public:
 
     Renderer() = default;
 
-    void setFramebuffer(void* address) requires(shader_cfg.shading == SHADING_ENABLED);
+    void setFramebuffer(void* address) requires(t_cfg.shader_cfg.shading == SHADING_ENABLED);
 
-    Framebuffer& getFramebuffer() requires(shader_cfg.shading == SHADING_ENABLED);
+    Framebuffer& getFramebuffer() requires(t_cfg.shader_cfg.shading == SHADING_ENABLED);
 
-    void setDepthbuffer(void* address) requires(shader_cfg.depth_test == DEPTH_TEST_ENABLED);
+    void setDepthbuffer(void* address) requires(t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED);
 
-    Depthbuffer& getDepthbuffer() requires(shader_cfg.depth_test == DEPTH_TEST_ENABLED);
+    Depthbuffer& getDepthbuffer() requires(t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED);
 
     void setResolution(int32 width, int32 height);
 
-    void setNearPlane(T distance) requires(shader_cfg.projection == PERSPECTIVE);
+    void setNearPlane(T distance);
 
-    ShaderProgram<T>& getShaderProgram();
+    ShaderProgram<T, t_cfg.shader_cfg>& getShaderProgram();
 
     void setGlobalData(const GlobalData* global_data);
 
@@ -187,7 +188,7 @@ private:
 
     T top_y_clip = static_cast<T>(-0.5);
 
-    ShaderProgram<T> shader_program;
+    ShaderProgram<T, t_cfg.shader_cfg> shader_program;
 
     const ModelData* models = nullptr;
 

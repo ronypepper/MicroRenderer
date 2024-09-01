@@ -8,31 +8,32 @@
 
 namespace MicroRenderer {
 
-template<typename T>
-class UVCTriangleAssembler : public BaseTriangleAssembler<T, UVCShaderInterface, UVCTriangleAssembler>
+template<typename T, ShaderConfiguration t_cfg>
+class UVCTriangleAssembler : public BaseTriangleAssembler<T, t_cfg, UVCShaderInterface, UVCTriangleAssembler>
 {
 public:
-    USE_SHADER_INTERFACE(UVCShaderInterface<T>);
+    using ShaderInterface_type = UVCShaderInterface<T, t_cfg>;
+    USE_SHADER_INTERFACE(ShaderInterface_type);
 
     static void interpolateVertices_implementation(UniformData uniform, VertexData from, VertexData to,
                                                    VertexSource* new_src, VertexBuffer* new_buf, T from_factor,
                                                    T to_factor)
     {
-        new_src->color = interpolateLinearly(from.source->color, to.source->color, from_factor, to_factor);
-        new_src->uv_coordinates = interpolateLinearly(from.source->uv_coordinates, to.source->uv_coordinates, from_factor, to_factor);
     }
 
     static void setupTriangle_implementation(UniformData uniform, VertexData vertex_1, VertexData vertex_2,
                                              VertexData vertex_3, TriangleBuffer* triangle, Vector2<T> v1_offset,
                                              const BarycentricIncrements<T>& bc_incs)
     {
-        // Setup interpolation of vertex color over triangle.
-        triangle->color.initialize(vertex_1.source->color, vertex_2.source->color, vertex_3.source->color, bc_incs,
-                                   v1_offset);
+        // Compute triangle normal.
+        Vector3<T> d1 = vertex_2.source->model_position - vertex_1.source->model_position;
+        Vector3<T> d2 = vertex_3.source->model_position - vertex_1.source->model_position;
+        Vector3<T> normal = d1.cross(d2);
+        normal.normalizeSafe();
 
-        // Setup interpolation of uv coordinates over triangle.
-        triangle->uv.initialize(vertex_1.source->uv_coordinates, vertex_2.source->uv_coordinates,
-                                vertex_3.source->uv_coordinates, bc_incs, v1_offset);
+        // Compute shading based on orientation of normal to sun direction.
+        T shade_factor = std::max(static_cast<T>(0.0), uniform.instance->towards_sun_dir_model_space.dot(normal));
+        triangle->shading = uniform.instance->color * (shade_factor + static_cast<T>(1.0)) * static_cast<T>(0.5);
     }
 };
 

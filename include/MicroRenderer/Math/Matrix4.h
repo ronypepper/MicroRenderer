@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Matrix3.h"
 #include "Vector4.h"
 
 namespace MicroRenderer {
@@ -40,16 +41,16 @@ public:
         components[15] = w3;
     }
     constexpr Matrix4(T value) {
-        columns[0] = { value, static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(0.0) };
-        columns[1] = { static_cast<T>(0.0), value, static_cast<T>(0.0), static_cast<T>(0.0) };
-        columns[2] = { static_cast<T>(0.0), static_cast<T>(0.0), value, static_cast<T>(0.0) };
-        columns[3] = { static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(0.0), value };
+        columns[0] = {value, static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(0.0)};
+        columns[1] = {static_cast<T>(0.0), value, static_cast<T>(0.0), static_cast<T>(0.0)};
+        columns[2] = {static_cast<T>(0.0), static_cast<T>(0.0), value, static_cast<T>(0.0)};
+        columns[3] = {static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(0.0), value};
     }
-    constexpr Matrix4(const Vector4<T>& Col_1, const Vector4<T>& Col_2, const Vector4<T>& Col_3, const Vector4<T>& Col_4) {
-        columns[0] = Col_1;
-        columns[1] = Col_2;
-        columns[2] = Col_3;
-        columns[3] = Col_4;
+    constexpr Matrix4(const Vector4<T>& col_1, const Vector4<T>& col_2, const Vector4<T>& col_3, const Vector4<T>& col_4) {
+        columns[0] = col_1;
+        columns[1] = col_2;
+        columns[2] = col_3;
+        columns[3] = col_4;
     }
     constexpr Matrix4(const Matrix4& other) {
         columns[0] = other.columns[0];
@@ -79,10 +80,22 @@ public:
 
     // Array subscript operator.
     Vector4<T>& operator[](size_t idx) {
+        assert(idx >= 0 && idx <= 3);
         return columns[idx];
     }
     const Vector4<T>& operator[](size_t idx) const {
+        assert(idx >= 0 && idx <= 3);
         return columns[idx];
+    }
+
+    // Sub-matrix access.
+    Matrix3<T> getMatrix3() const
+    {
+        return {
+            components[0], components[1], components[2],
+            components[4], components[5], components[6],
+            components[8], components[9], components[10]
+        };
     }
 
     // Relational operators.
@@ -222,6 +235,18 @@ public:
         lhs /= rhs;
         return lhs;
     }
+
+    // Return transpose of matrix.
+    Matrix4 getTranspose() const
+    {
+        return {
+            components[0], components[4], components[8], components[12],
+            components[1], components[5], components[9], components[13],
+            components[2], components[6], components[10], components[14],
+            components[3], components[7], components[11], components[15]
+        };
+    }
+
 };
 
 typedef Matrix4<float> mat4;

@@ -8,6 +8,7 @@
 #include "MicroRenderer/Core/Renderer.h"
 
 // Core/Shading
+#include "MicroRenderer/Core/Shading/ShaderConfiguration.h"
 #include "MicroRenderer/Core/Shading/ShaderInterface.h"
 #include "MicroRenderer/Core/Shading/ShaderProgram.h"
 #include "MicroRenderer/Core/Shading/VertexShader.h"
@@ -21,6 +22,7 @@
 
 // Math
 #include "MicroRenderer/Math/Matrix4.h"
+#include "MicroRenderer/Math/Matrix3.h"
 #include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Math/Transform.h"
 #include "MicroRenderer/Math/Utility.h"

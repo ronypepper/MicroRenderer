@@ -26,6 +26,7 @@ add_executable(MicroRenderer test/3d_freefly_viewer.cpp
         include/MicroRenderer/MicroRenderer.h
         include/MicroRenderer/Math/Vector4.h
         include/MicroRenderer/Math/Vector3.h
+        include/MicroRenderer/Math/Matrix3.h
         include/MicroRenderer/Math/Matrix4.h
         include/MicroRenderer/Math/ScalarTypes.h
         include/MicroRenderer/Math/Vector2.h
@@ -44,12 +45,14 @@ add_executable(MicroRenderer test/3d_freefly_viewer.cpp
         include/MicroRenderer/Core/Shading/TriangleAssembler.h
         include/MicroRenderer/Shaders/CustomShader/CustomTriangleAssembler.h
         include/MicroRenderer/Shaders/CustomShader/CustomShaderProgram.h
-        assets/models/cube.h
+        assets/models/cube_old.h
         assets/models/rasterization_test.h
         include/MicroRenderer/Core/Textures/Texture2D.h
         include/MicroRenderer/Core/Textures/TextureTypes.h
         include/MicroRenderer/Core/Textures/TextureConfiguration.h
         include/MicroRenderer/Math/Interpolation.h
+        assets/textures/test_texture.h
+        include/MicroRenderer/Core/Shading/ShaderConfiguration.h
 )
 
 # The .tpp files seem to confuse cmake's language selection.

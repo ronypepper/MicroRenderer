@@ -8,31 +8,22 @@
 
 namespace MicroRenderer {
 
-template<typename T>
-class UVCFragmentShader : public BaseFragmentShader<T, UVCShaderInterface, UVCFragmentShader>
+template<typename T, ShaderConfiguration t_cfg>
+class UVCFragmentShader : public BaseFragmentShader<T, t_cfg, UVCShaderInterface, UVCFragmentShader>
 {
 public:
-    USE_SHADER_INTERFACE(UVCShaderInterface<T>);
+    using ShaderInterface_type = UVCShaderInterface<T, t_cfg>;
+    USE_SHADER_INTERFACE(ShaderInterface_type);
 
     template<IncrementationMode mode>
     static void interpolateAttributes_implementation(UniformData uniform, TriangleBuffer* triangle, int32 offset)
     {
-        // Interpolate vertex color.
-        triangle->color.increment<mode>(offset);
-
-        // Interpolate uv coordinates.
-        triangle->uv.increment<mode>(offset);
     }
 
     static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
-        // Vertex color.
-        //return (triangle->color + Vector3<T>(1.f)) * static_cast<T>(0.5);
-
-        // Texture.
-        auto color = uniform.instance->texture_color.samplePixelAt(static_cast<Vector2<T>>(triangle->uv.getValue()));
-        //return {color.g, color.b, 1.f, color.r};
-        return uniform.instance->texture_color.samplePixelAt(static_cast<Vector2<T>>(triangle->uv.getValue()));
+        // Return flat shading.
+        return triangle->shading;
     }
 };
 

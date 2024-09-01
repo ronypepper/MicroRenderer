@@ -235,6 +235,9 @@ public:
         if (sqLength > epsilon) {
             *this /= sqLength;
         }
+        else {
+            *this = {static_cast<T>(0.0)};
+        }
     }
 
     // Normalization without zero-check.

@@ -8,20 +8,16 @@
 
 namespace MicroRenderer {
 
-template<typename T>
-class UVCVertexShader : public BaseVertexShader<T, UVCShaderInterface, UVCVertexShader>
+template<typename T, ShaderConfiguration t_cfg>
+class UVCVertexShader : public BaseVertexShader<T, t_cfg, UVCShaderInterface, UVCVertexShader>
 {
 public:
-    USE_SHADER_INTERFACE(UVCShaderInterface<T>);
+    using ShaderInterface_type = UVCShaderInterface<T, t_cfg>;
+    USE_SHADER_INTERFACE(ShaderInterface_type);
 
     static void shadeVertex_implementation(UniformData uniform, VertexData vertex)
     {
-        // auto global = uniform.global;
-        // auto instance = uniform.instance;
-        // auto source = vertex.source;
-        // auto buffer = vertex.buffer;
-        //vertex.buffer->screen_position = (uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)}).getXYZ();
-        vertex.buffer->clip_position = uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)};
+        vertex.buffer->setPosition(uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)});
     }
 };
 

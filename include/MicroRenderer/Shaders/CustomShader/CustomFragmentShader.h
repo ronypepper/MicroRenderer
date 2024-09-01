@@ -8,11 +8,12 @@
 
 namespace MicroRenderer {
 
-template<typename T>
-class CustomFragmentShader : public BaseFragmentShader<T, CustomShaderInterface, CustomFragmentShader>
+template<typename T, ShaderConfiguration t_cfg>
+class CustomFragmentShader : public BaseFragmentShader<T, t_cfg, CustomShaderInterface, CustomFragmentShader>
 {
 public:
-    USE_SHADER_INTERFACE(CustomShaderInterface<T>);
+    using ShaderInterface_type = CustomShaderInterface<T, t_cfg>;
+    USE_SHADER_INTERFACE(ShaderInterface_type);
 
     template<IncrementationMode mode>
     static void interpolateAttributes_implementation(UniformData uniform, TriangleBuffer* triangle, int32 offset)

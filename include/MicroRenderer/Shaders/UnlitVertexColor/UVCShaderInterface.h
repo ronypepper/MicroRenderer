@@ -6,13 +6,9 @@
 #include "MicroRenderer/Core/Shading/ShaderInterface.h"
 #include "MicroRenderer/Math/Matrix4.h"
 #include "MicroRenderer/Math/Vector3.h"
-#include "MicroRenderer/Math/Vector2.h"
 #include "MicroRenderer/Core/Textures/Texture2D.h"
-#include "MicroRenderer/Math/Interpolation.h"
 
 namespace MicroRenderer {
-
-constexpr ShaderOutput uvc_shader_output = {FORMAT_RGB888, TYPE_NORMALIZED};
 
 template<typename T>
 struct UVCGlobalData
@@ -23,30 +19,28 @@ template<typename T>
 struct UVCInstanceData
 {
     Matrix4<T> model_screen_tf;
-    Texture2D<T, {ACCESS_READONLY, FORMAT_RGB888, SWIZZLE_NONE, TYPE_NORMALIZED, WRAPMODE_TILING}> texture_color;
+    Vector3<T> towards_sun_dir_model_space;
+    Vector3<T> color;
 };
 
 template<typename T>
 struct UVCVertexSource
 {
     Vector3<T> model_position;
-    Vector3<T> color;
-    Vector2<T> uv_coordinates;
 };
 
-template<typename T>
-struct UVCVertexBuffer : BasePerspectiveVertexBuffer<T>
+template<typename T, ShaderConfiguration t_cfg>
+struct UVCVertexBuffer : BaseVertexBuffer<T, t_cfg>
 {
 };
 
-template<typename T>
-struct UVCTriangleBuffer : BaseDepthTriangleBuffer<T>
+template<typename T, ShaderConfiguration t_cfg>
+struct UVCTriangleBuffer : BaseTriangleBuffer<T, t_cfg>
 {
-    TriangleAttribute<T, Vector3<T>> color;
-    TriangleAttribute<T, Vector2<T>> uv;
+    Vector3<T> shading;
 };
 
-template<typename T>
-using UVCShaderInterface = BaseShaderInterface<T, uvc_shader_output, UVCGlobalData, UVCInstanceData, UVCVertexSource, UVCVertexBuffer, UVCTriangleBuffer>;
+template<typename T, ShaderConfiguration t_cfg>
+using UVCShaderInterface = BaseShaderInterface<T, t_cfg, UVCGlobalData, UVCInstanceData, UVCVertexSource, UVCVertexBuffer, UVCTriangleBuffer>;
 
 } // namespace MicroRenderer
