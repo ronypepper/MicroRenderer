@@ -10,33 +10,33 @@
 
 namespace MicroRenderer {
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     Texture2D<T, t_cfg>::Texture2D(const void* address, int32 width, int32 height) requires (t_cfg.access == ACCESS_READONLY)
     {
         setBuffer(address);
         setResolution(width, height);
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     Texture2D<T, t_cfg>::Texture2D(void* address, int32 width, int32 height) requires (t_cfg.access == ACCESS_READWRITE)
     {
         setBuffer(address);
         setResolution(width, height);
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::setBuffer(const void* address) requires (t_cfg.access == ACCESS_READONLY)
     {
         buffer = reinterpret_cast<BufferPointer>(address);
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::setBuffer(void* address) requires (t_cfg.access == ACCESS_READWRITE)
     {
         buffer = reinterpret_cast<BufferPointer>(address);
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::setResolution(int32 width, int32 height)
     {
         assert(width >= 0 && height >= 0);
@@ -44,25 +44,25 @@ namespace MicroRenderer {
         texture_height = height;
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::BufferPointer Texture2D<T, t_cfg>::getBuffer() const
     {
         return buffer;
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     int32 Texture2D<T, t_cfg>::getWidth() const
     {
         return texture_width;
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     int32 Texture2D<T, t_cfg>::getHeight() const
     {
         return texture_height;
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::BufferPosition Texture2D<T, t_cfg>::pixelNumToBufferPosition(int32 pixel_num) const
     {
         // Compute position address and alignment inside buffer, based on interal format.
@@ -79,7 +79,7 @@ namespace MicroRenderer {
         return position;
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::BufferPosition Texture2D<T, t_cfg>::getWrappedBufferPosition(int32 x, int32 y) const
     {
         // Modify sample coordinates, based on wrapmode.
@@ -95,7 +95,7 @@ namespace MicroRenderer {
         return pixelNumToBufferPosition(x + texture_width * y);
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::moveBufferPositionRight(BufferPosition& position)
     {
         // Move position address and alignment inside buffer by one pixel, based on interal format.
@@ -115,7 +115,7 @@ namespace MicroRenderer {
         }
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::moveBufferPositionDown(BufferPosition& position)
     {
         // Move position address and alignment inside buffer by one pixel row, based on interal format.
@@ -126,19 +126,19 @@ namespace MicroRenderer {
         }
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::ExternalType Texture2D<T, t_cfg>::readPixelAt(int32 x, int32 y) const
     {
         return readPixelAt(getWrappedBufferPosition(x, y));
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::ExternalType Texture2D<T, t_cfg>::readPixelAt(Vector2<T> uv) const
     {
         return readPixelAt(std::lround(uv.x * texture_width - static_cast<T>(0.5)), std::lround(uv.y * texture_height - static_cast<T>(0.5)));
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::ExternalType Texture2D<T, t_cfg>::readPixelAt(BufferPosition position) const
     {
         // Depth-format is stored as ExternalType, return pixel directly.
@@ -204,19 +204,19 @@ namespace MicroRenderer {
         }
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::drawPixelAt(int32 x, int32 y, const ExternalType& value) requires(t_cfg.access == ACCESS_READWRITE)
     {
         drawPixelAt(getWrappedBufferPosition(x, y), value);
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::drawPixelAt(Vector2<T> uv, const ExternalType& value) requires(t_cfg.access == ACCESS_READWRITE)
     {
         drawPixelAt(std::lround(uv.x * texture_width - static_cast<T>(0.5)), std::lround(uv.y * texture_height - static_cast<T>(0.5)), value);
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::drawPixelAt(BufferPosition position, const ExternalType& value) requires(t_cfg.access == ACCESS_READWRITE)
     {
         // Depth-format is stored as ExternalType, store pixel directly.
@@ -287,7 +287,7 @@ namespace MicroRenderer {
         }
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     void Texture2D<T, t_cfg>::clearBuffer(const ExternalType& value) requires(t_cfg.access == ACCESS_READWRITE)
     {
         // Fill buffer with constant value, based on texture format.
@@ -301,7 +301,7 @@ namespace MicroRenderer {
         }
     }
 
-    template <typename T, TextureConfig t_cfg>
+    template <typename T, TextureConfiguration t_cfg>
     typename Texture2D<T, t_cfg>::ExternalType Texture2D<T, t_cfg>::samplePixelAt(Vector2<T> uv) const
     {
         // Bilinear interpolate the four closest pixels around sample point.
@@ -323,7 +323,7 @@ namespace MicroRenderer {
         return top * (static_cast<T>(1.0) - alpha_y) + bottom * alpha_y;
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     bool Texture2D<T, t_cfg>::saveToPPMImage(const std::string& file_name) const
     {
         // Check parameters and open file.
@@ -420,7 +420,7 @@ namespace MicroRenderer {
         return true;
     }
 
-    template<typename T, TextureConfig t_cfg>
+    template<typename T, TextureConfiguration t_cfg>
     bool Texture2D<T, t_cfg>::verifyBufferPosition(BufferPosition position) const
     {
         // Check if position points to valid pixel inside buffer, based on texture format.

@@ -17,7 +17,8 @@ public:
 
     static void shadeVertex_implementation(UniformData uniform, VertexData vertex)
     {
-        vertex.buffer->setPosition(uniform.instance->model_screen_tf * Vector4<T>{vertex.source->model_position, static_cast<T>(1.0)});
+        // Transform position into (unhomogenized) screen space.
+        vertex.buffer->setPosition(uniform.instance->model_screen_tf.transformPosition(vertex.source->position));
     }
 };
 

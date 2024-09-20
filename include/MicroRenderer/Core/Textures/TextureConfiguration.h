@@ -50,7 +50,7 @@ enum TextureWrapmode : uint32
     NUM_WRAPMODES
 };
 
-struct TextureConfig
+struct TextureConfiguration
 {
     TextureAccess access;
     TextureInternalFormat format;

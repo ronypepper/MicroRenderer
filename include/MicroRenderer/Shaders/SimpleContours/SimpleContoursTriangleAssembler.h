@@ -19,21 +19,18 @@ public:
                                                    VertexSource* new_src, VertexBuffer* new_buf, T from_factor,
                                                    T to_factor)
     {
+        new_src->position = interpolateLinearly(from.source->position, to.source->position, from_factor, to_factor);
     }
 
-    static void setupTriangle_implementation(UniformData uniform, VertexData vertex_1, VertexData vertex_2,
-                                             VertexData vertex_3, TriangleBuffer* triangle, Vector2<T> v1_offset,
+    static void setupTriangle_implementation(UniformData uniform, uint32 tri_idx, VertexData v1, VertexData v2,
+                                             VertexData v3, TriangleBuffer* triangle, Vector2<T> v1_offset,
                                              const BarycentricIncrements<T>& bc_incs)
     {
-        // Compute triangle normal.
-        Vector3<T> d1 = vertex_2.source->model_position - vertex_1.source->model_position;
-        Vector3<T> d2 = vertex_3.source->model_position - vertex_1.source->model_position;
-        Vector3<T> normal = d1.cross(d2);
-        normal.normalizeSafe();
-
-        // Compute shading based on orientation of normal to sun direction.
-        T shade_factor = std::max(static_cast<T>(0.0), uniform.instance->towards_sun_dir_model_space.dot(normal));
-        triangle->shading = uniform.instance->color * (shade_factor + static_cast<T>(1.0)) * static_cast<T>(0.5);
+        // Compute shading based on orientation of triangle normal to sun direction for a simple contour.
+        const Vector3<T>& normal = uniform.instance->triangle_normals[tri_idx];
+        T shade_factor = uniform.instance->towards_sun_dir_model_space.dot(normal);
+        shade_factor = std::max(static_cast<T>(0.2), (shade_factor + static_cast<T>(1.0)) * static_cast<T>(0.5));
+        triangle->shading = uniform.instance->color * shade_factor;
     }
 };
 

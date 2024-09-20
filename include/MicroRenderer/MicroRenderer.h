@@ -38,9 +38,16 @@
 #include "MicroRenderer/Shaders/CustomShader/CustomTriangleAssembler.h"
 #include "MicroRenderer/Shaders/CustomShader/CustomFragmentShader.h"
 
-// Shaders/UnlitVertexColor
+// Shaders/SimpleContours
 #include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
 #include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderProgram.h"
 #include "MicroRenderer/Shaders/SimpleContours/SimpleContoursVertexShader.h"
 #include "MicroRenderer/Shaders/SimpleContours/SimpleContoursTriangleAssembler.h"
 #include "MicroRenderer/Shaders/SimpleContours/SimpleContoursFragmentShader.h"
+
+// Shaders/GouraudTextured
+#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedShaderInterface.h"
+#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedShaderProgram.h"
+#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedVertexShader.h"
+#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedTriangleAssembler.h"
+#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedFragmentShader.h"

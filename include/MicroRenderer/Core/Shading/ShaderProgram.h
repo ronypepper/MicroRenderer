@@ -79,12 +79,12 @@ public:
         TriangleAssembler_type::interpolateVertices(uniform_data, from, to, new_src, new_buf, from_factor, to_factor);
     }
 
-    void setupTriangle(VertexData vertex_1, VertexData vertex_2, VertexData vertex_3, TriangleBuffer* triangle,
+    void setupTriangle(uint32 tri_idx, VertexData v1, VertexData v2, VertexData v3, TriangleBuffer* triangle,
                        int32 start_x, int32 start_y)
     {
-        const Vector3<T>& pos_1 = vertex_1.buffer->screen_position;
-        const Vector3<T>& pos_2 = vertex_2.buffer->screen_position;
-        const Vector3<T>& pos_3 = vertex_3.buffer->screen_position;
+        const Vector3<T>& pos_1 = v1.buffer->screen_position;
+        const Vector3<T>& pos_2 = v2.buffer->screen_position;
+        const Vector3<T>& pos_3 = v3.buffer->screen_position;
         BarycentricIncrements<T> bc_incs;
         computeBarycentricIncrements(pos_1.getXY(), pos_2.getXY(), pos_3.getXY(), bc_incs);
 
@@ -98,7 +98,7 @@ public:
             triangle->depth.initialize(rev_z_1, rev_z_2, rev_z_3, bc_incs, v1_offset);
         }
 
-        TriangleAssembler_type::setupTriangle(uniform_data, vertex_1, vertex_2, vertex_3, triangle, v1_offset, bc_incs);
+        TriangleAssembler_type::setupTriangle(uniform_data, tri_idx, v1, v2, v3, triangle, v1_offset, bc_incs);
     }
 
     template<IncrementationMode mode>

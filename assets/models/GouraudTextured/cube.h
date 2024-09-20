@@ -1,19 +1,19 @@
 /*
  * MicroRenderer model description.
  * Model name: cube
- * Target shader: MicroRenderer/Shaders/UnlitVertexColor
+ * Target shader: MicroRenderer/Shaders/GouraudTextured
  */
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
-#include "MicroRenderer/Shaders/UnlitVertexColor/UVCShaderInterface.h"
+#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedShaderInterface.h"
 
 using namespace MicroRenderer;
 
 constexpr int32 cube_vertex_number = 36;
 
 template<typename T>
-constexpr UVCVertexSource<T> cube_vertices[cube_vertex_number] = {
+constexpr GouraudTexturedVertexSource<T> cube_vertices[cube_vertex_number] = {
     {{-1.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, {0.9998999834060669, 0.9998999238014221}},
 	{{1.0, -1.0, 1.0}, {0.0, 0.0, 1.0}, {9.995669825002551e-05, 0.00010004099021898583}},
 	{{1.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, {0.9998999238014221, 9.999290341511369e-05}},
@@ -69,7 +69,7 @@ constexpr TriangleIndices cube_triangles[cube_triangle_number] = {
 	{33, 34, 35}
 };
 
-template<typename T>
-constexpr typename UVCShaderInterface<T>::ModelData cube_model = {
+template<typename T, ShaderConfiguration t_cfg>
+constexpr typename GouraudTexturedShaderInterface<T, t_cfg>::ModelData cube_model = {
     cube_vertex_number, cube_triangle_number, cube_vertices<T>, cube_triangles
 };

@@ -247,6 +247,16 @@ public:
         };
     }
 
+    // Performs a matrix-vector multiplication with a homogenous 3D-vector, i.e. matrix * {x, y, z, 1}, skipping the multiplications by one.
+    Vector4<T> transformPosition(const Vector3<T>& vector) const
+    {
+        Vector4<T> result;
+        result[0] = vector[0] * columns[0][0] + vector[1] * columns[1][0] + vector[2] * columns[2][0] + columns[3][0];
+        result[1] = vector[0] * columns[0][1] + vector[1] * columns[1][1] + vector[2] * columns[2][1] + columns[3][1];
+        result[2] = vector[0] * columns[0][2] + vector[1] * columns[1][2] + vector[2] * columns[2][2] + columns[3][2];
+        result[3] = vector[0] * columns[0][3] + vector[1] * columns[1][3] + vector[2] * columns[2][3] + columns[3][3];
+        return result;
+    }
 };
 
 typedef Matrix4<float> mat4;

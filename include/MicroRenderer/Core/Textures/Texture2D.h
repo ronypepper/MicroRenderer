@@ -11,7 +11,7 @@
 
 namespace MicroRenderer {
 
-template<typename T, TextureConfig t_cfg>
+template<typename T, TextureConfiguration t_cfg>
 class Texture2D
 {
     static_assert(t_cfg.access < NUM_ACCESS_MODES, "Invalid access mode in texture configuration!");

@@ -86,10 +86,10 @@ void Renderer<T, t_cfg, ShaderProgram>::setModels(const ModelData* models)
 }
 
 template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::setRenderInstructions(const RenderInstruction* instructions, uint16 number)
+void Renderer<T, t_cfg, ShaderProgram>::setInstances(const InstanceData* instances, uint16 number)
 {
-    render_instructions = instructions;
-    num_instructions = number;
+    this->instances = instances;
+    num_instances = number;
 }
 
 template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
@@ -222,27 +222,26 @@ void Renderer<T, t_cfg, ShaderProgram>::render()
         scanline_render_data.next_scanline = 0;
     }
 
-    // Process render instructions (instances) sequentially.
-    for (uint16 instruction_idx = 0; instruction_idx < num_instructions; ++instruction_idx) {
+    // Process instances sequentially.
+    for (uint16 instance_idx = 0; instance_idx < num_instances; ++instance_idx) {
         // Get model data.
-        const ModelData* model = models + render_instructions[instruction_idx].model_idx;
+        const ModelData* model = models + instances[instance_idx].model_idx;
 
         // Set instance data.
-        const InstanceData* instance = &render_instructions[instruction_idx].instance_data;
-        shader_program.setInstanceData(instance);
+        shader_program.setInstanceData(instances + instance_idx);
 
         // Process vertices.
         processVertices(model);
 
         if constexpr (t_cfg.render_mode == SCANLINE) {
-            // Temporarilly store instruction reference for later storage in rasterization buffers.
-            scanline_render_data.instruction_idx_marker = instruction_idx;
+            // Temporarily store instance reference for later storage in rasterization buffers.
+            scanline_render_data.instance_idx_marker = instance_idx;
         }
 
         // Process triangles.
         // Shading mode 'Framebuffer' shades here.
         // Shading mode 'SCANLINE' stores rasterization buffers for later line-by-line rasterization.
-        for (uint16 tri_idx = 0; tri_idx < model->num_triangles; ++tri_idx) {
+        for (uint32 tri_idx = 0; tri_idx < static_cast<uint32>(model->num_triangles); ++tri_idx) {
             cullAndClipTriangle(model, tri_idx);
         }
     }
@@ -259,10 +258,10 @@ void Renderer<T, t_cfg, ShaderProgram>::renderNextScanline() requires (t_cfg.ren
     ScanlineRenderData& data = scanline_render_data;
     int32 scanline = scanline_render_data.next_scanline;
 
-    // Add newly visible triangles (buffers) to active section.
+    // Add newly visible triangles to active section.
     while (data.actives_order_stop < data.num_buffers) {
         if (data.order[data.actives_order_stop].scanline == scanline) {
-            // Add next triangle (buffer) to actives.
+            // Add next triangle to actives.
             ++data.actives_order_stop;
         }
         else {
@@ -275,8 +274,7 @@ void Renderer<T, t_cfg, ShaderProgram>::renderNextScanline() requires (t_cfg.ren
         RasterizationBuffer& rasterization = data.buffers[data.order[i].buffer_idx];
 
         // Set instance data.
-        const InstanceData* instance = &render_instructions[rasterization.instruction_idx].instance_data;
-        shader_program.setInstanceData(instance);
+        shader_program.setInstanceData(instances + rasterization.instance_idx);
 
         // Shade triangle on scanline.
         shadeScanlineOfTriangle(rasterization, scanline);
@@ -284,7 +282,7 @@ void Renderer<T, t_cfg, ShaderProgram>::renderNextScanline() requires (t_cfg.ren
         // Check if half-triangle has ended on this scanline.
         if (static_cast<int32>(rasterization.y_halftri_end) == scanline) {
             if (rasterization.y_halftri_end == rasterization.y_fulltri_end) {
-                // Triangle has ended completely. Remove triangle (buffer) from active section.
+                // Triangle has ended completely. Remove triangle from active section.
                 std::swap(data.order[i], data.order[data.actives_order_start]);
                 ++data.actives_order_start;
             }
@@ -328,7 +326,7 @@ void Renderer<T, t_cfg, ShaderProgram>::processVertices(const ModelData* model)
 }
 
 template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* model, uint16 tri_idx)
+void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* model, uint32 tri_idx)
 {
     // Gather vertex data.
     const uint16 v1_idx = model->indices[tri_idx].vertex_1_idx;
@@ -390,7 +388,7 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
             // Triangle is at least partially visible.
             if (num_visible_verts == 3) {
                 // Triangle fully visible (in z).
-                processTriangle(vertices[0], vertices[1], vertices[2]);
+                processTriangle(tri_idx, vertices[0], vertices[1], vertices[2]);
             }
             else {
                 // Temporary data for vertices created by clipping.
@@ -407,8 +405,8 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
                     const uint8 idx_3 = idx_2 == 2 ? 0 : idx_2 + 1;
                     shader_program.interpolateVertices(vertices[idx_2], vertices[idx_1], clipped_sources, clipped_buffers);
                     shader_program.interpolateVertices(vertices[idx_3], vertices[idx_1], clipped_sources + 1, clipped_buffers + 1);
-                    processTriangle(vertices[idx_3], clipped_vertices[1], clipped_vertices[0]);
-                    processTriangle(vertices[idx_3], clipped_vertices[0], vertices[idx_2]);
+                    processTriangle(tri_idx, vertices[idx_3], clipped_vertices[1], clipped_vertices[0]);
+                    processTriangle(tri_idx, vertices[idx_3], clipped_vertices[0], vertices[idx_2]);
                 }
                 else {
                     // Triangle is clipped into one new triangle.
@@ -417,34 +415,34 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
                     const uint8 idx_3 = idx_2 == 2 ? 0 : idx_2 + 1;
                     shader_program.interpolateVertices(vertices[idx_2], vertices[idx_1], clipped_sources, clipped_buffers);
                     shader_program.interpolateVertices(vertices[idx_3], vertices[idx_1], clipped_sources + 1, clipped_buffers + 1);
-                    processTriangle(vertices[idx_1], clipped_vertices[0], clipped_vertices[1]);
+                    processTriangle(tri_idx, vertices[idx_1], clipped_vertices[0], clipped_vertices[1]);
                 }
             }
         }
     }
     else {
-        processTriangle(vertices[0], vertices[1], vertices[2]);
+        processTriangle(tri_idx, vertices[0], vertices[1], vertices[2]);
     }
 }
 
 template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
-bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexData& vertex_1, const VertexData& vertex_2,
-                                                            const VertexData& vertex_3,
-                                                            RasterizationBuffer& rasterization, int32& start_scanline)
+bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(uint32 tri_idx, const VertexData& v1, const VertexData& v2,
+                                                                   const VertexData& v3, RasterizationBuffer& rasterization, int32& start_scanline)
 {
     // Triangle is split into first and second half-triangle, which are rasterized/shaded separately.
     // First half: scanlines contained between the two edges closest to y=0.
     // Second half: scanlines contained between the two edges farmost of y=0.
 
+    // Swizzle vertex order to be counter-clockwise when front-facing.
     const Vector3<T>* positions[3];
-    positions[0] = &vertex_1.buffer->screen_position;
+    positions[0] = &v1.buffer->screen_position;
     if (t_cfg.front_face == COUNTERCLOCKWISE) {
-        positions[1] = &vertex_2.buffer->screen_position;
-        positions[2] = &vertex_3.buffer->screen_position;
+        positions[1] = &v2.buffer->screen_position;
+        positions[2] = &v3.buffer->screen_position;
     }
     else {
-        positions[1] = &vertex_3.buffer->screen_position;
-        positions[2] = &vertex_2.buffer->screen_position;
+        positions[1] = &v3.buffer->screen_position;
+        positions[2] = &v2.buffer->screen_position;
     }
 
     // Backface culling and degenerate check.
@@ -627,7 +625,7 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(const VertexD
 
     // Setup triangle and store initial interpolation position (prev_scanline_stop_x and start_scanline).
     rasterization.prev_scanline_stop_x = static_cast<int16>(std::floor(rasterization.right_x));
-    shader_program.setupTriangle(vertex_1, vertex_2, vertex_3, &rasterization.triangle_buffer,
+    shader_program.setupTriangle(tri_idx, v1, v2, v3, &rasterization.triangle_buffer,
                                  rasterization.prev_scanline_stop_x, start_scanline);
 
     return true;
@@ -755,13 +753,13 @@ void Renderer<T, t_cfg, ShaderProgram>::shadeFullTriangle(RasterizationBuffer& r
 }
 
 template <typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::processTriangle(VertexData vertex_1, VertexData vertex_2, VertexData vertex_3)
+void Renderer<T, t_cfg, ShaderProgram>::processTriangle(uint32 tri_idx, VertexData v1, VertexData v2, VertexData v3)
 {
     if constexpr (t_cfg.render_mode == FRAMEBUFFER) {
         // Setup triangle and rasterization.
         RasterizationBuffer rasterization;
         int32 start_scanline;
-        if (setupTriangleRasterization(vertex_1, vertex_2, vertex_3, rasterization, start_scanline)) {
+        if (setupTriangleRasterization(tri_idx, v1, v2, v3, rasterization, start_scanline)) {
             // Shade.
             shadeFullTriangle(rasterization, start_scanline);
         }
@@ -773,9 +771,9 @@ void Renderer<T, t_cfg, ShaderProgram>::processTriangle(VertexData vertex_1, Ver
 
         // Setup triangle and rasterization.
         int32 start_scanline;
-        if (setupTriangleRasterization(vertex_1, vertex_2, vertex_3, rasterization, start_scanline)) {
-            // Store instruction reference in rasterization buffer.
-            rasterization.instruction_idx = scanline_render_data.instruction_idx_marker;
+        if (setupTriangleRasterization(tri_idx, v1, v2, v3, rasterization, start_scanline)) {
+            // Store instance reference in rasterization buffer.
+            rasterization.instance_idx = scanline_render_data.instance_idx_marker;
 
             // Add entry to stored rasterization order.
             RasterizationOrder& order = scanline_render_data.order[buffer_idx];

@@ -23,7 +23,8 @@ public:
     static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
         // Return flat shading.
-        return triangle->shading;
+        return {triangle->shading.g, triangle->shading.b, 1.f, triangle->shading.r};
+        //return triangle->shading;
     }
 };
 

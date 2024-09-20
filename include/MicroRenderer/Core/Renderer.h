@@ -61,25 +61,20 @@ public:
     //using T = std::conditional_t<t_cfg.data_type == FLOATING_POINT, float, void>; POSSIBLE_FEATURE: selectable float/fp and precision through RendererConfiguration
     using ShaderProgram_type = ShaderProgram<T, t_cfg.shader_cfg>;
     USE_SHADER_INTERFACE(ShaderProgram_type::ShaderInterface);
-    static constexpr TextureConfig framebuffer_cfg = {
+    static constexpr TextureConfiguration framebuffer_cfg = {
         ACCESS_READWRITE, t_cfg.shader_cfg.output.format, SWIZZLE_NONE, t_cfg.shader_cfg.output.type,
         WRAPMODE_NONE
     };
-    static constexpr TextureConfig depthbuffer_cfg = {
+    static constexpr TextureConfiguration depthbuffer_cfg = {
         ACCESS_READWRITE, FORMAT_DEPTH, SWIZZLE_NONE, TYPE_DECIMAL, WRAPMODE_NONE
     };
     using Framebuffer = std::conditional_t<t_cfg.shader_cfg.shading == SHADING_ENABLED, Texture2D<T, framebuffer_cfg>, std::monostate>;
     using Depthbuffer = std::conditional_t<t_cfg.shader_cfg.depth_test == DEPTH_TEST_ENABLED, Texture2D<T, depthbuffer_cfg>, std::monostate>;
     using NearPlaneType = std::conditional_t<t_cfg.shader_cfg.projection == PERSPECTIVE, T, std::monostate>;
-    struct RenderInstruction
-    {
-        uint16 model_idx = 0;
-        InstanceData instance_data;
-    };
     struct RasterizationBuffer
     {
         bool last_is_left;
-        uint16 instruction_idx;
+        uint16 instance_idx;
         int16 prev_scanline_stop_x;
         int16 y_halftri_end;
         int16 y_fulltri_end;
@@ -113,9 +108,9 @@ public:
 
         uint16 actives_order_stop = 0;
 
-        int16 num_scanlines_per_bucket = 1;
+        // int16 num_scanlines_per_bucket = 1; POSSIBLE_FEATURE: rendering scanlines in buckets
 
-        uint16 instruction_idx_marker = 0;
+        uint16 instance_idx_marker = 0;
 
         int32 next_scanline = 0;
     };
@@ -141,7 +136,7 @@ public:
 
     void setModels(const ModelData* models);
 
-    void setRenderInstructions(const RenderInstruction* instructions, uint16 number);
+    void setInstances(const InstanceData* instances, uint16 number);
 
     void setVertexBuffers(VertexBuffer* buffers);
 
@@ -160,9 +155,9 @@ public:
 private:
     void processVertices(const ModelData* model);
 
-    void cullAndClipTriangle(const ModelData* model, uint16 tri_idx);
+    void cullAndClipTriangle(const ModelData* model, uint32 tri_idx);
 
-    bool setupTriangleRasterization(const VertexData& vertex_1, const VertexData& vertex_2, const VertexData& vertex_3,
+    bool setupTriangleRasterization(uint32 tri_idx, const VertexData& v1, const VertexData& v2, const VertexData& v3,
                                     RasterizationBuffer& rasterization, int32& start_scanline);
 
     template<typename BufferType>
@@ -172,7 +167,7 @@ private:
 
     void shadeFullTriangle(RasterizationBuffer& rasterization, int32 start_scanline);
 
-    void processTriangle(VertexData vertex_1, VertexData vertex_2, VertexData vertex_3);
+    void processTriangle(uint32 tri_idx, VertexData v1, VertexData v2, VertexData v3);
 
     Framebuffer framebuffer;
 
@@ -192,9 +187,9 @@ private:
 
     const ModelData* models = nullptr;
 
-    const RenderInstruction* render_instructions = nullptr;
+    const InstanceData* instances = nullptr;
 
-    uint16 num_instructions = 0;
+    uint16 num_instances = 0;
 
     VertexBuffer* vertex_buffers = nullptr;
 

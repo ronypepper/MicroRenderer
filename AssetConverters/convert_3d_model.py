@@ -28,9 +28,9 @@ if 'Shader' not in config:
 if 'ShaderDirectory' not in config['Shader'] or config['Shader']['ShaderDirectory'] == '':
     sys.exit('Invalid Configuration: ShaderDirectory not set!')
 shader_directory = config['Shader']['ShaderDirectory']
-if 'ShaderAbbreviation' not in config['Shader'] or config['Shader']['ShaderAbbreviation'] == '':
-    sys.exit('Invalid Configuration: ShaderAbbreviation not set!')
-shader_abbreviation = config['Shader']['ShaderAbbreviation']
+if 'ShaderName' not in config['Shader'] or config['Shader']['ShaderName'] == '':
+    sys.exit('Invalid Configuration: ShaderName not set!')
+shader_name = config['Shader']['ShaderName']
 
 # Get and verify "VertexSourceOrder" section of model conversion file.
 vs_elem_names = ('Position', 'Normal', 'Tangent', 'BiTangent', 'TextureCoord_1', 'TextureCoord_2', 'TextureCoord_3',
@@ -68,14 +68,14 @@ header_template = '''/*
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
-#include "%SHADER_DIRECTORY%/%SHADER_ABBREVIATION%ShaderInterface.h"
+#include "%SHADER_DIRECTORY%/%SHADER_NAME%ShaderInterface.h"
 
 using namespace MicroRenderer;
 
 constexpr int32 %MODEL_NAME%_vertex_number = %VERTEX_NUMBER%;
 
 template<typename T>
-constexpr %SHADER_ABBREVIATION%VertexSource<T> %MODEL_NAME%_vertices[%MODEL_NAME%_vertex_number] = {
+constexpr %SHADER_NAME%VertexSource<T> %MODEL_NAME%_vertices[%MODEL_NAME%_vertex_number] = {
     %VERTEX_ENTRIES%
 };
 
@@ -85,15 +85,15 @@ constexpr TriangleIndices %MODEL_NAME%_triangles[%MODEL_NAME%_triangle_number] =
     %TRIANGLE_ENTRIES%
 };
 
-template<typename T>
-constexpr typename %SHADER_ABBREVIATION%ShaderInterface<T>::ModelData %MODEL_NAME%_model = {
+template<typename T, ShaderConfiguration t_cfg>
+constexpr typename %SHADER_NAME%ShaderInterface<T, t_cfg>::ModelData %MODEL_NAME%_model = {
     %MODEL_NAME%_vertex_number, %MODEL_NAME%_triangle_number, %MODEL_NAME%_vertices<T>, %MODEL_NAME%_triangles
 };
 '''
 
 # Insert information into header template.
 header_template = header_template.replace('%SHADER_DIRECTORY%', shader_directory)
-header_template = header_template.replace('%SHADER_ABBREVIATION%', shader_abbreviation)
+header_template = header_template.replace('%SHADER_NAME%', shader_name)
 
 
 def convert_model(model_file_name):
@@ -104,7 +104,9 @@ def convert_model(model_file_name):
 
     # Attempt to import model file with AssImp.
     try:
-        with pyassimp.load(model_in_path, processing=pyassimp.postprocess.aiProcess_Triangulate) as scene:
+        import_flags = pyassimp.postprocess.aiProcess_Triangulate
+        import_flags |= pyassimp.postprocess.aiProcess_OptimizeMeshes
+        with pyassimp.load(model_in_path, processing=import_flags) as scene:
             # Verify mesh in AssImp.
             if len(scene.meshes) == 0:
                 print('Error: Assimp found no mesh in: "{}"!'.format(model_in_path))
@@ -134,6 +136,9 @@ def convert_model(model_file_name):
             triangle_indices = ''
             triangle_number = len(mesh.faces)
             for t_idx in range(triangle_number):
+                if len(mesh.faces[t_idx]) != 3:
+                    print('Error: Assimp found non-triangle faces in mesh: "{}"!'.format(model_in_path))
+                    return
                 new_entry = str(mesh.faces[t_idx]).replace('[', '{').replace(']', '}')
                 triangle_indices += new_entry + ',\n\t'
             triangle_indices = triangle_indices[:-3]

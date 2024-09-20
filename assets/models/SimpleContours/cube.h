@@ -1,6 +1,8 @@
-//
-// Created by pusdo on 13/08/2024.
-//
+/*
+ * MicroRenderer model description.
+ * Model name: cube
+ * Target shader: MicroRenderer/Shaders/SimpleContours
+ */
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"

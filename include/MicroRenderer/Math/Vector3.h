@@ -233,7 +233,7 @@ public:
     void normalizeSafe(T epsilon = static_cast<T>(0.001)) {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
-            *this /= sqLength;
+            *this /= std::sqrt(sqLength);
         }
         else {
             *this = {static_cast<T>(0.0)};
@@ -242,14 +242,14 @@ public:
 
     // Normalization without zero-check.
     void normalizeUnsafe() {
-        *this /= squaredLength();
+        *this /= length();
     }
 
     // Return normalized copy with zero-check, returns zero-vector on fail.
     Vector3 getNormalized(T epsilon = static_cast<T>(0.001)) const {
         T sqLength = squaredLength();
         if (sqLength > epsilon) {
-            return *this / sqLength;
+            return *this / std::sqrt(sqLength);
         }
         return {static_cast<T>(0.0)};
     }
@@ -264,6 +264,22 @@ public:
         T min = x < y ? x : y;
         min = z < min ? z : min;
         return min;
+    }
+
+    // Returns per-component max and min of a vector and a scalar.
+    static Vector3 max(const Vector3& v, T s) {
+        return {std::max(v.x, s), std::max(v.y, s), std::max(v.z, s)};
+    }
+    static Vector3 min(const Vector3& v, T s) {
+        return {std::min(v.x, s), std::min(v.y, s), std::min(v.z, s)};
+    }
+
+    // Returns per-component max and min of two vectors.
+    static Vector3 max(const Vector3& v1, const Vector3& v2) {
+        return {std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z)};
+    }
+    static Vector3 min(const Vector3& v1, const Vector3& v2) {
+        return {std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z)};
     }
 };
 

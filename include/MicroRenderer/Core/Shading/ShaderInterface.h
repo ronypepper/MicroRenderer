@@ -11,6 +11,11 @@
 
 namespace MicroRenderer {
 
+struct BaseInstanceData
+{
+    uint16 model_idx = 0;
+};
+
 template<typename T, ShaderConfiguration t_cfg>
 struct BaseVertexBuffer
 {
@@ -63,6 +68,8 @@ template <typename T, ShaderConfiguration t_cfg, template <typename> class Globa
           template <typename, ShaderConfiguration> class TriangleBuffer>
 class BaseShaderInterface
 {
+    static_assert(std::is_base_of_v<BaseInstanceData, InstanceData<T>>,
+                  "ShaderInterface: InstanceData must inherit from BaseInstanceData!");
     static_assert(std::is_base_of_v<BaseVertexBuffer<T, t_cfg>, VertexBuffer<T, t_cfg>>,
                   "ShaderInterface: VertexBuffer must inherit from BaseVertexBuffer!");
     static_assert(std::is_base_of_v<BaseTriangleBuffer<T, t_cfg>, TriangleBuffer<T, t_cfg>>,

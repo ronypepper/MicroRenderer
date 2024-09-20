@@ -14,7 +14,7 @@ struct CustomGlobalData
 };
 
 template<typename T>
-struct CustomInstanceData
+struct CustomInstanceData : BaseInstanceData
 {
     // Define interface here.
 };
