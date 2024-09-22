@@ -4,7 +4,7 @@
 
 #pragma once
 #include "MicroRenderer/Core/Shading/TriangleAssembler.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
+#include "SimpleContoursShaderInterface.h"
 
 namespace MicroRenderer {
 

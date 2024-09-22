@@ -386,13 +386,6 @@ namespace MicroRenderer {
                     pixel = static_cast<WorkingType>(value * max_values);
                 }
 
-                // Apply pixel channel swizzle.
-                if constexpr (t_cfg.swizzle == SWIZZLE_BGR) {
-                    uint8 temp = pixel.r;
-                    pixel.r = pixel.b;
-                    pixel.b = temp;
-                }
-
                 // Insert pixel into file stream, based on texture format and swizzle.
                 if constexpr (t_cfg.format == FORMAT_RGB888) {
                     file << std::to_string(pixel.r) << " " << std::to_string(pixel.g) << " " << std::to_string(pixel.b) << "\n";

@@ -4,15 +4,15 @@
 
 #pragma once
 #include "MicroRenderer/Core/Shading/VertexShader.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
+#include "UnlitTexturedShaderInterface.h"
 
 namespace MicroRenderer {
 
 template<typename T, ShaderConfiguration t_cfg>
-class SimpleContoursVertexShader : public BaseVertexShader<T, t_cfg, SimpleContoursShaderInterface, SimpleContoursVertexShader>
+class UnlitTexturedVertexShader : public BaseVertexShader<T, t_cfg, UnlitTexturedShaderInterface, UnlitTexturedVertexShader>
 {
 public:
-    using ShaderInterface_type = SimpleContoursShaderInterface<T, t_cfg>;
+    using ShaderInterface_type = UnlitTexturedShaderInterface<T, t_cfg>;
     USE_SHADER_INTERFACE(ShaderInterface_type);
 
     static void shadeVertex_implementation(UniformData uniform, VertexData vertex)

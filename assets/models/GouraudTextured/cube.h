@@ -6,7 +6,7 @@
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
-#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedShaderInterface.h"
+#include "GouraudTextured/GouraudTexturedShaderInterface.h"
 
 using namespace MicroRenderer;
 

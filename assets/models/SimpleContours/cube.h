@@ -6,7 +6,7 @@
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
+#include "SimpleContours/SimpleContoursShaderInterface.h"
 
 using namespace MicroRenderer;
 
@@ -23,18 +23,6 @@ constexpr SimpleContoursVertexSource<T> cube_vertices[cube_vertex_number] = {
     {{-0.5f, 0.5f, 0.5f}},
     {{-0.5f, -0.5f, 0.5f}}
 };
-
-// template<typename T>
-// constexpr UVCVertexSource<T> cube_vertices[cube_vertex_number] = {
-//     {{0.5f, 0.5f, -0.5f}, {0.f, 0.f, 1.f}, {-1.f, -1.f}},
-//     {{0.5f, -0.5f, -0.5f}, {0.f, 1.f, 0.f}, {-1.f, 2.f}},
-//     {{0.5f, 0.5f, 0.5f}, {0.f, 1.f, 1.f}, {2.f, -1.f}},
-//     {{0.5f, -0.5f, 0.5f}, {1.f, 0.f, 0.f}, {2.f, 2.f}},
-//     {{-0.5f, 0.5f, -0.5f}, {1.f, 0.f, 1.f}, {-5.f, -1.f}},
-//     {{-0.5f, -0.5f, -0.5f}, {1.f, 1.f, 0.f}, {-5.f, 2.f}},
-//     {{-0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}, {2.f, -1.f}},
-//     {{-0.5f, -0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}, {2.f, 2.f}}
-// };
 
 constexpr int32 cube_triangle_number = 12;
 

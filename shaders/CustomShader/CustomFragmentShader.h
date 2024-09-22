@@ -4,7 +4,7 @@
 
 #pragma once
 #include "MicroRenderer/Core/Shading/FragmentShader.h"
-#include "MicroRenderer/Shaders/CustomShader/CustomShaderInterface.h"
+#include "CustomShaderInterface.h"
 
 namespace MicroRenderer {
 

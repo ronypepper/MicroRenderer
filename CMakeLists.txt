@@ -9,13 +9,14 @@ find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 # 1. Look for a SDL2 package, 2. Look for the SDL2maincomponent and 3. DO NOT fail when SDL2main is not available
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
-add_executable(MicroRenderer test/3d_freefly_viewer.cpp)
+add_executable(MicroRenderer demo/3d_freefly_viewer.cpp)
 
 # The .tpp files seem to confuse cmake's language selection.
 set_target_properties(MicroRenderer PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(MicroRenderer PUBLIC include)
 target_include_directories(MicroRenderer PUBLIC assets)
+target_include_directories(MicroRenderer PUBLIC shaders)
 target_include_directories(MicroRenderer PUBLIC third-party)
 
 # SDL2::SDL2main may or may not be available. It is e.g. required by Windows GUI applications

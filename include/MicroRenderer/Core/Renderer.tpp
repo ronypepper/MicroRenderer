@@ -341,6 +341,20 @@ void Renderer<T, t_cfg, ShaderProgram>::cullAndClipTriangle(const ModelData* mod
     const Vector3<T>& v2_screen_pos = vertices[1].buffer->screen_position;
     const Vector3<T>& v3_screen_pos = vertices[2].buffer->screen_position;
 
+    // Backface culling and early degenerate check.
+    const Vector2<T> v1_to_v2 = {v2_screen_pos.x - v1_screen_pos.x, v2_screen_pos.y - v1_screen_pos.y};
+    const Vector2<T> v1_to_v3 = {v3_screen_pos.x - v1_screen_pos.x, v3_screen_pos.y - v1_screen_pos.y};
+    constexpr T DEGENERATE_THRESHOLD = static_cast<T>(0.001);
+    const T area = v1_to_v2.x * v1_to_v3.y - v1_to_v2.y * v1_to_v3.x;
+    if constexpr (t_cfg.front_face == COUNTERCLOCKWISE) {
+        if (area < DEGENERATE_THRESHOLD) // Counter-clockwise vertex order yields positive area.
+            return;
+    }
+    else {
+        if (area > DEGENERATE_THRESHOLD) // Clockwise vertex order yields negative area.
+            return;
+    }
+
     // Lambda for computing the outcode of a vertex for Cohen-Sutherland clipping.
     auto getCohenSutherlandOutcode = [right_x_clip = this->right_x_clip, top_y_clip = this->top_y_clip]
                                      (const Vector3<T>& position) -> uint8
@@ -444,14 +458,6 @@ bool Renderer<T, t_cfg, ShaderProgram>::setupTriangleRasterization(uint32 tri_id
         positions[1] = &v3.buffer->screen_position;
         positions[2] = &v2.buffer->screen_position;
     }
-
-    // Backface culling and degenerate check.
-    const Vector2<T> v1_to_v2 = {positions[1]->x - positions[0]->x, positions[1]->y - positions[0]->y};
-    const Vector2<T> v1_to_v3 = {positions[2]->x - positions[0]->x, positions[2]->y - positions[0]->y};
-    constexpr T DEGENERATE_THRESHOLD = static_cast<T>(0.001);
-    const T area = v1_to_v2.x * v1_to_v3.y - v1_to_v2.y * v1_to_v3.x; // Clockwise vertex order yields negative area.
-    if (area < DEGENERATE_THRESHOLD)
-        return false;
 
     // Sort vertices in y, starting with smallest y.
     uint16 start_idx = 0;

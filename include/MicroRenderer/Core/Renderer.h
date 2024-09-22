@@ -62,7 +62,7 @@ public:
     using ShaderProgram_type = ShaderProgram<T, t_cfg.shader_cfg>;
     USE_SHADER_INTERFACE(ShaderProgram_type::ShaderInterface);
     static constexpr TextureConfiguration framebuffer_cfg = {
-        ACCESS_READWRITE, t_cfg.shader_cfg.output.format, SWIZZLE_NONE, t_cfg.shader_cfg.output.type,
+        ACCESS_READWRITE, t_cfg.shader_cfg.output.format, t_cfg.shader_cfg.output.swizzle, t_cfg.shader_cfg.output.type,
         WRAPMODE_NONE
     };
     static constexpr TextureConfiguration depthbuffer_cfg = {

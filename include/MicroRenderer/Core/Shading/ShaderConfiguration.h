@@ -46,6 +46,7 @@ enum ShadingMode : uint32
 struct ShaderOutput
 {
     TextureInternalFormat format;
+    TextureSwizzle swizzle;
     TextureExternalType type;
 };
 

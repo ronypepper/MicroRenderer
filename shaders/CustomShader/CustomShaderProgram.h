@@ -3,10 +3,10 @@
 //
 
 #pragma once
+#include "MicroRenderer/Core/Shading/ShaderProgram.h"
 #include "CustomFragmentShader.h"
 #include "CustomTriangleAssembler.h"
 #include "CustomVertexShader.h"
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
 
 namespace MicroRenderer {
 

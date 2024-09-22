@@ -4,7 +4,7 @@
 
 #pragma once
 #include "MicroRenderer/Core/Shading/FragmentShader.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
+#include "SimpleContoursShaderInterface.h"
 
 namespace MicroRenderer {
 
@@ -23,8 +23,8 @@ public:
     static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
         // Return flat shading.
-        return {triangle->shading.g, triangle->shading.b, 1.f, triangle->shading.r};
-        //return triangle->shading;
+        //return {triangle->shading.g, triangle->shading.b, 1.f, triangle->shading.r};
+        return triangle->shading;
     }
 };
 

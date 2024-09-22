@@ -4,41 +4,53 @@
 
 #include "SDL.h"
 //#include "fpm/fixed.hpp"
+#include <chrono>
+
 #include "MicroRenderer/MicroRenderer.h"
 
 using namespace MicroRenderer;
 
 #define SHADER_SIMPLECOUNTOURS 0
-#define SHADER_GOURAUDTEXTURED 1
+#define SHADER_UNLITTEXTURED 1
 
 #define MODE_FREEFLY 0
 #define MODE_CAPTURE_STATS 1
 
+// ------------------ Demo configuration --------------------- //
+
+#define DEMO_MODE MODE_CAPTURE_STATS
+#define USED_SHADER SHADER_UNLITTEXTURED
+
+// ------------------ Demo configuration --------------------- //
+
 // ------------------ Renderer configuration --------------------- //
 
 using DataType = double;//fpm::fixed_16_16;
-#define DEMO_MODE MODE_FREEFLY
-#define USED_SHADER SHADER_GOURAUDTEXTURED
-constexpr int32 window_width = 1200;
-constexpr int32 window_height = 1200;
+constexpr int32 window_width = 1000;
+constexpr int32 window_height = 1000;
+// constexpr ShaderConfiguration my_shader_cfg = {
+// 	PERSPECTIVE, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED,
+// 	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_NORMALIZED}
+// };
 constexpr ShaderConfiguration my_shader_cfg = {
 	PERSPECTIVE, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED,
-	{FORMAT_RGB888, TYPE_NORMALIZED}
+	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_INTEGER}
 };
 constexpr RendererConfiguration my_renderer_cfg = {SCANLINE, CLOCKWISE, my_shader_cfg};
 
 // ------------------ Renderer configuration --------------------- //
 
-// ------------------ Model and Texture includes --------------------- //
+// ------------------ Shaderr, Model and Texture includes --------------------- //
 
 #if USED_SHADER == SHADER_SIMPLECOUNTOURS
+#include "SimpleContours/SimpleContoursShaderProgram.h"
 #include "models/SimpleContours/cube.h"
 #include "models/SimpleContours/tu_vienna_logo.h"
-#include "models/SimpleContours/stanford_bunny.h"
-#elif USED_SHADER == SHADER_GOURAUDTEXTURED
-#include "models/GouraudTextured/cube.h"
-#include "models/GouraudTextured/plane.h"
-#include "textures/test_texture.h"
+#elif USED_SHADER == SHADER_UNLITTEXTURED
+#include "UnlitTextured/UnlitTexturedShaderProgram.h"
+#include "models/UnlitTextured/cube.h"
+#include "models/UnlitTextured/plane.h"
+#include "textures/color_grid_texture.h"
 #include "textures/tu_logo_texture.h"
 #endif
 
@@ -49,8 +61,8 @@ constexpr RendererConfiguration my_renderer_cfg = {SCANLINE, CLOCKWISE, my_shade
 // Renderer object.
 #if USED_SHADER == SHADER_SIMPLECOUNTOURS
 using MyRenderer = Renderer<DataType, my_renderer_cfg, SimpleContoursShaderProgram>;
-#elif USED_SHADER == SHADER_GOURAUDTEXTURED
-using MyRenderer = Renderer<DataType, my_renderer_cfg, GouraudTexturedShaderProgram>;
+#elif USED_SHADER == SHADER_UNLITTEXTURED
+using MyRenderer = Renderer<DataType, my_renderer_cfg, UnlitTexturedShaderProgram>;
 #endif
 using MyShaderProgram = MyRenderer::ShaderProgram_type;
 MyRenderer my_renderer;
@@ -65,11 +77,17 @@ void* framebuffer_address = nullptr;
 DataType depthbuffer_address[window_width * window_height];
 
 // Screen-projection transform.
+constexpr float aspect_ratio = static_cast<float>(window_height) / static_cast<float>(window_width);
 Matrix4<DataType> screen_proj_tf;
 
 // View state.
-Vector3<DataType> view_position = {0., 0., 0.};
-Vector3<DataType> view_orientation = {0., 0., 0.};
+#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+Vector3<DataType> view_position = {2.84572, -2.857554, -4.254630};
+Vector3<DataType> view_orientation = {-29.76, -37.5, 0.};
+#elif USED_SHADER == SHADER_UNLITTEXTURED
+Vector3<DataType> view_position = {4.872785, -3.176531, -7.266366};
+Vector3<DataType> view_orientation = {-20.82, -31.38, 0.};
+#endif
 constexpr DataType view_translation_speed = 2.;
 constexpr DataType view_rotation_speed = 30.;
 Vector3<DataType> view_fwd_dir, view_up_dir, view_right_dir;
@@ -82,15 +100,9 @@ Vector3<DataType> view_fwd_dir, view_up_dir, view_right_dir;
 // Triangle normals.
 Vector3<DataType> cube_tri_normals[cube_triangle_number];
 Vector3<DataType> tu_vienna_logo_tri_normals[tu_vienna_logo_triangle_number];
-Vector3<DataType> stanford_bunny_tri_normals[stanford_bunny_triangle_number];
 
 // Lighting.
 Vector3<DataType> towards_sun_dir_world_space = Vector3<DataType>(2.0, 0.3, 0.7).getNormalized();
-PointLight<DataType> world_point_lights[3] = {
-	{{2.3, -0.1, 2.8}, {3.0, 0.1, 0.1}},
-	{{-1.5, -1.3, 2.7}, {0.1, 3.0, 0.1}},
-	{{0.0, -0.3, 2.5}, {0.1, 0.1, 3.0}}
-};
 
 // Global data.
 MyRenderer::GlobalData global_data = {};
@@ -109,18 +121,24 @@ constexpr MyRenderer::ModelData models[] = {
 	cube_model<DataType, my_shader_cfg>,
 	tu_vienna_logo_model<DataType, my_shader_cfg>
 };
-#elif USED_SHADER == SHADER_GOURAUDTEXTURED
+#elif USED_SHADER == SHADER_UNLITTEXTURED
+
+// // Lighting.
+// PointLight<DataType> world_point_lights[3] = {
+// 	{{2.3, -0.1, 0.8}, {3.0, 0.1, 0.1}},
+// 	{{-1.5, -1.3, -0.7}, {0.1, 3.0, 0.1}},
+// 	{{0.0, -0.3, 0.5}, {0.1, 0.1, 3.0}}
+// };
+
 // Global data.
-MyRenderer::GlobalData global_data = {
-    0.3
-};
+MyRenderer::GlobalData global_data = {};
 
 // Instance data.
 constexpr uint16 num_instances = 3;
 MyRenderer::InstanceData instances[num_instances] = {
-    {0 ,{1.0}, {test_texture_rgb888, test_texture_width, test_texture_height} ,{}},
-    {1 ,{1.0}, {tu_logo_texture, tu_logo_texture_width, tu_logo_texture_height}, {}},
-    {1 ,{1.0}, {tu_logo_texture, tu_logo_texture_width, tu_logo_texture_height}, {}}
+    {0 ,{1.0}, {color_grid_texture, color_grid_texture_width, color_grid_texture_height}},
+    {1 ,{1.0}, {tu_logo_texture, tu_logo_texture_width, tu_logo_texture_height}},
+    {1 ,{1.0}, {tu_logo_texture, tu_logo_texture_width, tu_logo_texture_height}}
 };
 
 // Models.
@@ -131,7 +149,7 @@ constexpr MyRenderer::ModelData models[] = {
 };
 #endif
 
-// Cube state.
+// Scene movement.
 DataType objects_y_rot = 180.0;
 DataType cubes_rot_speed = 15.0;
 
@@ -141,13 +159,20 @@ DataType cubes_rot_speed = 15.0;
 
 void initializeRenderer()
 {
+#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+	// Preprocess triangle normals.
+	preprocessTriangleNormals<DataType, MyShaderProgram>(&cube_model<DataType, my_shader_cfg>, cube_tri_normals);
+	preprocessTriangleNormals<DataType, MyShaderProgram>(&tu_vienna_logo_model<DataType, my_shader_cfg>, tu_vienna_logo_tri_normals);
+#endif
+
 	// Set resolution.
 	my_renderer.setResolution(window_width, window_height);
 
 	// Compute screen-projection transform.
 	screen_proj_tf = Transform::viewport<DataType>(window_width, window_height, false, false);
 	if constexpr (my_shader_cfg.projection == PERSPECTIVE) {
-		screen_proj_tf *= Transform::perspectiveProjection<DataType>(-0.02, 0.02, -0.02, 0.02, 0.1, 15.);
+		screen_proj_tf *= Transform::perspectiveProjection<DataType>(-0.02, 0.02, -0.02 * aspect_ratio,
+		                                                             0.02 * aspect_ratio, 0.1, 15.);
 		my_renderer.setNearPlane(DataType(0.1));
 	}
 	else {
@@ -169,56 +194,60 @@ void updateRenderer(DataType delta_time)
 	view_fwd_dir = view_rotation * Vector3<DataType>(0., 0., 1.);
 	view_up_dir = view_rotation * Vector3<DataType>(0., 1., 0.);
 	view_right_dir = view_rotation * Vector3<DataType>(1., 0., 0.);
-	const Matrix4<DataType> view_tf = Transform::camera<DataType>(view_position, view_fwd_dir, view_up_dir);
+	Matrix4<DataType> view_tf = Transform::camera<DataType>(view_position, view_fwd_dir, view_up_dir);
 
 	// Compute screen-projection-camera transform.
 	const Matrix4<DataType> screen_proj_view_tf = screen_proj_tf * view_tf;
 
 	// Rotate cubes.
+#if DEMO_MODE == MODE_FREEFLY
 	objects_y_rot += cubes_rot_speed * delta_time;
+#elif DEMO_MODE == MODE_CAPTURE_STATS
+	objects_y_rot += 0.1;
+#endif
 
 #if USED_SHADER == SHADER_SIMPLECOUNTOURS
 	// TU Vienna Logo transform.
-    Matrix4<DataType> tu_logo_model_tf = Transform::translation<DataType>(Vector3<DataType>(0., 0., 3.5));
+    Matrix4<DataType> tu_logo_model_tf = Transform::translation<DataType>(Vector3<DataType>(0., 0., 0.2));
     tu_logo_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., objects_y_rot, 0.));
     tu_logo_model_tf *= Transform::scale<DataType>(Vector3<DataType>(0.3));
     instances[0].model_screen_tf = screen_proj_view_tf * tu_logo_model_tf;
     Vector3<DataType> tu_logo_sun_dir = tu_logo_model_tf.getMatrix3().getTranspose() * towards_sun_dir_world_space;
     instances[0].towards_sun_dir_model_space = tu_logo_sun_dir.getNormalized();
     // Cube 1 transform.
-    Matrix4<DataType> cube_1_model_tf = Transform::translation<DataType>(Vector3<DataType>(-1.1, 0.2, 3.2));
+    Matrix4<DataType> cube_1_model_tf = Transform::translation<DataType>(Vector3<DataType>(-1.1, 0.2, -0.1));
     cube_1_model_tf *= Transform::rotationEuler(Vector3<DataType>(0., objects_y_rot, 0.));
     cube_1_model_tf *= Transform::scale(Vector3<DataType>(0.5));
     instances[1].model_screen_tf = screen_proj_view_tf * cube_1_model_tf;
     Vector3<DataType> cube_1_sun_dir = cube_1_model_tf.getMatrix3().getTranspose() * towards_sun_dir_world_space;
     instances[1].towards_sun_dir_model_space = cube_1_sun_dir.getNormalized();
     // Cube 2 transform.
-    Matrix4<DataType> cube_2_model_tf = Transform::translation<DataType>(Vector3<DataType>(-1.3, 0.4, 3.1));
+    Matrix4<DataType> cube_2_model_tf = Transform::translation<DataType>(Vector3<DataType>(-1.3, 0.4, -0.2));
     cube_2_model_tf *= Transform::rotationEuler(Vector3<DataType>(20., 10. + objects_y_rot, 35.));
     cube_2_model_tf *= Transform::scale(Vector3<DataType>(0.5));
     instances[2].model_screen_tf = screen_proj_view_tf * cube_2_model_tf;
     Vector3<DataType> cube_2_sun_dir = cube_2_model_tf.getMatrix3().getTranspose() * towards_sun_dir_world_space;
     instances[2].towards_sun_dir_model_space = cube_2_sun_dir.getNormalized();
-#elif USED_SHADER == SHADER_GOURAUDTEXTURED
+#elif USED_SHADER == SHADER_UNLITTEXTURED
     // Cube transform.
-    Matrix4<DataType> cube_model_tf = Transform::translation<DataType>(Vector3<DataType>(-1., 0., 3.5));
+    Matrix4<DataType> cube_model_tf = Transform::translation<DataType>(Vector3<DataType>(-1., 0., 0.2));
     cube_model_tf *= Transform::rotationEuler(Vector3<DataType>(0., objects_y_rot, 0.));
     cube_model_tf *= Transform::scale(Vector3<DataType>(0.5));
     instances[0].model_screen_tf = screen_proj_view_tf * cube_model_tf;
-    // Vector3<DataType> cube_1_sun_dir = cube_1_model_tf.getMatrix3().getTranspose() * towards_sun_dir_world_space;
     // for (int32 i = 0; i < 3; ++ i) {
     //     instances[0].point_lights[i] = {
     //         world_point_lights[i].intensity,
-    //         world_point_lights[i].position;
+    //         world_point_lights[i].position
+    //     	};
     // }
     // Plane 1 transform.
     DataType plane_scale_mod = static_cast<DataType>(tu_logo_texture_width) / static_cast<DataType>(tu_logo_texture_height);
-    Matrix4<DataType> plane_1_model_tf = Transform::translation<DataType>(Vector3<DataType>(1., 0., 3.5));
+    Matrix4<DataType> plane_1_model_tf = Transform::translation<DataType>(Vector3<DataType>(1., 0., 0.2));
     plane_1_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., 180. + objects_y_rot, 0.));
     plane_1_model_tf *= Transform::scale<DataType>(Vector3<DataType>(plane_scale_mod * 0.5, 0.5, 0.5));
     instances[1].model_screen_tf = screen_proj_view_tf * plane_1_model_tf;
     // Plane 2 transform.
-    Matrix4<DataType> plane_2_model_tf = Transform::translation<DataType>(Vector3<DataType>(1., 0., 3.5));
+    Matrix4<DataType> plane_2_model_tf = Transform::translation<DataType>(Vector3<DataType>(1., 0., 0.2));
     plane_2_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., objects_y_rot, 0.));
     plane_2_model_tf *= Transform::scale<DataType>(Vector3<DataType>(plane_scale_mod * 0.5, 0.5, 0.5));
     instances[2].model_screen_tf = screen_proj_view_tf * plane_2_model_tf;
@@ -227,15 +256,20 @@ void updateRenderer(DataType delta_time)
 
 void clearRenderer()
 {
-	// Update renderer's framebuffer and depthbuffer address.
+	// Set start buffer addresses.
 	my_renderer.setFramebuffer(framebuffer_address);
 	my_renderer.setDepthbuffer(depthbuffer_address);
 
-	// Clear renderer's framebuffer and depthbuffer.
+	// Override buffer resolutions.
 	my_renderer.getFramebuffer().setResolution(window_width, window_height);
-	my_renderer.getFramebuffer().clearBuffer({0.f});
 	my_renderer.getDepthbuffer().setResolution(window_width, window_height);
-	my_renderer.getDepthbuffer().clearBuffer(0.f);
+
+	// Clear buffers.
+	my_renderer.getFramebuffer().clearBuffer({0});
+	my_renderer.getDepthbuffer().clearBuffer(0.);
+
+	// Reset resolutions.
+	my_renderer.setResolution(window_width, window_height);
 }
 
 void drawRenderer()
@@ -271,16 +305,16 @@ constexpr int32 window_scale_x = 1;
 constexpr int32 window_scale_y = 1;
 
 // Timing.
-uint32 last_frame_ticks = 0;
-DataType delta_time = 0.;
-uint32 delta_milliseconds = 0;
+std::chrono::time_point<std::chrono::steady_clock> last_frame_time;
 
-// Render time.
-constexpr uint32 capture_num_frames = 300;
-uint32 min_render_time = 0xFFFFFFFF;
-uint32 max_render_time = 0;
-uint32 sum_render_time = 0;
+// Stats.
+volatile uint32 frame_time = 0;
+constexpr uint32 capture_num_frames = 3600;
+uint32 min_frame_time = 0xFFFFFFFF;
+uint32 max_frame_time = 0;
+uint32 sum_frame_time = 0;
 uint32 num_frames = 0;
+bool stats_printed = false;
 
 void handleSDLError(int error_code)
 {
@@ -303,7 +337,7 @@ void init()
 										  window_width, window_height);
 	handleSDLError(sdl_frame_texture == nullptr);
 
-	last_frame_ticks = SDL_GetTicks();
+	last_frame_time = std::chrono::high_resolution_clock::now();
 
 	initializeRenderer();
 
@@ -315,10 +349,10 @@ void init()
 void update()
 {
 	// Compute delta time.
-    const uint32 current_ticks = SDL_GetTicks();
-    delta_milliseconds = current_ticks - last_frame_ticks;
-    delta_time = static_cast<DataType>(delta_milliseconds) / static_cast<DataType>(1000.0);
-    last_frame_ticks = current_ticks;
+	auto current_time = std::chrono::high_resolution_clock::now();
+    uint32 delta_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time).count();
+    DataType delta_time = static_cast<DataType>(delta_microseconds) / static_cast<DataType>(1000000.0);
+    last_frame_time = current_time;
 
     // Poll SDL events.
     SDL_PumpEvents();
@@ -400,22 +434,27 @@ void update()
     }
 #endif
 
+	// Update call.
+	auto start = std::chrono::high_resolution_clock::now();
     updateRenderer(delta_time);
+	auto elapsed = std::chrono::high_resolution_clock::now() - start;
+	frame_time = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 }
 
-void draw() {
+void draw()
+{
 #if DEMO_MODE == MODE_FREEFLY
 	// Clear call.
 	clearRenderer();
 
-	// Take ticks to measure fps.
-	const uint32 ticks_stamp = SDL_GetTicks();
-
 	// Draw call.
+	auto start = std::chrono::high_resolution_clock::now();
 	drawRenderer();
+	auto elapsed = std::chrono::high_resolution_clock::now() - start;
+	frame_time += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 
-	// Compute fps.
-	const double fps = 1000.0 / static_cast<double>(SDL_GetTicks() - ticks_stamp);
+	// Print FPS info to console.
+	printf("\nFPS: %f", 1000000.0 / static_cast<double>(frame_time));
 
 	// Show depth.
 	if (show_depth) {
@@ -427,47 +466,44 @@ void draw() {
 			*pixel_pointer++ = depth;
 		}
 	}
-
-	// Print FPS info to console.
-	printf((std::string("\nFPS: ") + std::to_string(fps)).c_str());
 #elif DEMO_MODE == MODE_CAPTURE_STATS
 	if (num_frames < capture_num_frames) {
 		// Clear call.
 		clearRenderer();
 
-		// Take ticks to measure rendering time.
-		const uint32 ticks_stamp = SDL_GetTicks();
-
 		// Draw call.
+		auto start = std::chrono::high_resolution_clock::now();
 		drawRenderer();
+		auto elapsed = std::chrono::high_resolution_clock::now() - start;
+		frame_time += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 
 		// Update rendering time stats.
-		const uint32 render_time = SDL_GetTicks() - ticks_stamp;
-		sum_render_time += render_time;
-		if (render_time < min_render_time)
-			min_render_time = render_time;
-		if (render_time > max_render_time)
-			max_render_time = render_time;
+		sum_frame_time += frame_time;
+		if (frame_time < min_frame_time)
+			min_frame_time = frame_time;
+		if (frame_time > max_frame_time)
+			max_frame_time = frame_time;
 
 		// Print remaining frames info to console.
 		++num_frames;
-		printf((std::string("\nFRAMES: ") + std::to_string(num_frames) + std::string("/") + std::to_string(capture_num_frames)).c_str());
+		printf("\nFRAMES: %i/%i", num_frames, capture_num_frames);
 	}
-	else {
+	else if (!stats_printed) {
 		// Print rendering time stats info to console.
 		printf("\n\nSTATS CAPTURED.");
-		const double avg_time = static_cast<double>(sum_render_time) / static_cast<double>(capture_num_frames);
-		printf((std::string("\nAvg [ms]: ") + std::to_string(avg_time)).c_str());
-		const double min_time = static_cast<double>(min_render_time);
-		printf((std::string("\nMin [ms]: ") + std::to_string(min_time)).c_str());
-		const double max_time = static_cast<double>(max_render_time);
-		printf((std::string("\nMax [ms]: ") + std::to_string(max_time)).c_str());
-		exit(0);
+		const double avg_time = static_cast<double>(sum_frame_time) / static_cast<double>(capture_num_frames) / 1000.0;
+		printf("\nAvg [ms]: %f", avg_time);
+		const double min_time = static_cast<double>(min_frame_time) / 1000.0;
+		printf("\nMin [ms]: %f", min_time);
+		const double max_time = static_cast<double>(max_frame_time) / 1000.0;
+		printf("\nMax [ms]: %f", max_time);
+		printf("\nAvg [fps]: %f", 1000.0 / avg_time);
+		printf("\nMin [fps]: %f", 1000.0 / max_time);
+		printf("\nMax [fps]: %f", 1000.0 / min_time);
+		stats_printed = true;
 	}
 #endif
 }
-
-// ------------------ SDL Demo --------------------- //
 
 int main(int argc, char *argv[])
 {
@@ -476,13 +512,15 @@ int main(int argc, char *argv[])
 	// Update and draw loop.
     while (true) {
         // Lock SDL texture.
-        int framebuffer_pitch = 0;
-        handleSDLError(SDL_LockTexture(sdl_frame_texture, nullptr, &framebuffer_address, &framebuffer_pitch));
+        int sdl_framebuffer_pitch = 0;
+        handleSDLError(SDL_LockTexture(sdl_frame_texture, nullptr, &framebuffer_address, &sdl_framebuffer_pitch));
 
     	update();
     	draw();
 
-        //printf("X: %f, Y: %f, Z: %f\n", view_position.x, view_position.y, view_position.z);
+    	// Print viewer position and orientation to console.
+        //printf("\nTRA: X: %f, Y: %f, Z: %f\n", view_position.x, view_position.y, view_position.z);
+    	//printf("ROT: X: %f, Y: %f, Z: %f\n", view_orientation.x, view_orientation.y, view_orientation.z);
 
         // Save framebuffer and depthbuffer to image.
         if (save_image) {

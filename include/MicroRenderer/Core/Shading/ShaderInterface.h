@@ -80,7 +80,6 @@ class BaseShaderInterface
     using ExternalValue = typename TextureExternal<t_cfg.output.type, T>::type;
     using ExternalType = typename TextureInternal<t_cfg.output.format, T>::template PixelType<ExternalValue>;
 public:
-    //using Value_type = T;
     using ShaderOutput_type = ExternalType;
     using GlobalData_type = GlobalData<T>;
     using InstanceData_type = InstanceData<T>;

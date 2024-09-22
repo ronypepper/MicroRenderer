@@ -31,23 +31,30 @@
 #include "MicroRenderer/Math/Vector4.h"
 #include "MicroRenderer/Math/Interpolation.h"
 
-// Shaders/CustomShader
-#include "MicroRenderer/Shaders/CustomShader/CustomShaderInterface.h"
-#include "MicroRenderer/Shaders/CustomShader/CustomShaderProgram.h"
-#include "MicroRenderer/Shaders/CustomShader/CustomVertexShader.h"
-#include "MicroRenderer/Shaders/CustomShader/CustomTriangleAssembler.h"
-#include "MicroRenderer/Shaders/CustomShader/CustomFragmentShader.h"
-
-// Shaders/SimpleContours
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderInterface.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursShaderProgram.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursVertexShader.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursTriangleAssembler.h"
-#include "MicroRenderer/Shaders/SimpleContours/SimpleContoursFragmentShader.h"
-
-// Shaders/GouraudTextured
-#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedShaderInterface.h"
-#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedShaderProgram.h"
-#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedVertexShader.h"
-#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedTriangleAssembler.h"
-#include "MicroRenderer/Shaders/GouraudTextured/GouraudTexturedFragmentShader.h"
+// // Shaders/CustomShader
+// #include "CustomShader/CustomShaderInterface.h"
+// #include "CustomShader/CustomShaderProgram.h"
+// #include "CustomShader/CustomVertexShader.h"
+// #include "CustomShader/CustomTriangleAssembler.h"
+// #include "CustomShader/CustomFragmentShader.h"
+//
+// // Shaders/SimpleContours
+// #include "SimpleContours/SimpleContoursShaderInterface.h"
+// #include "SimpleContours/SimpleContoursShaderProgram.h"
+// #include "SimpleContours/SimpleContoursVertexShader.h"
+// #include "SimpleContours/SimpleContoursTriangleAssembler.h"
+// #include "SimpleContours/SimpleContoursFragmentShader.h"
+//
+// // Shaders/UnlitTextured
+// #include "UnlitTextured/UnlitTexturedShaderInterface.h"
+// #include "UnlitTextured/UnlitTexturedShaderProgram.h"
+// #include "UnlitTextured/UnlitTexturedVertexShader.h"
+// #include "UnlitTextured/UnlitTexturedTriangleAssembler.h"
+// #include "UnlitTextured/UnlitTexturedFragmentShader.h"
+//
+// // Shaders/GouraudTextured
+// #include "GouraudTextured/GouraudTexturedShaderInterface.h"
+// #include "GouraudTextured/GouraudTexturedShaderProgram.h"
+// #include "GouraudTextured/GouraudTexturedVertexShader.h"
+// #include "GouraudTextured/GouraudTexturedTriangleAssembler.h"
+// #include "GouraudTextured/GouraudTexturedFragmentShader.h"

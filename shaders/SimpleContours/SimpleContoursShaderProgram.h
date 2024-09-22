@@ -3,10 +3,10 @@
 //
 
 #pragma once
+#include "MicroRenderer/Core/Shading/ShaderProgram.h"
 #include "SimpleContoursFragmentShader.h"
 #include "SimpleContoursTriangleAssembler.h"
 #include "SimpleContoursVertexShader.h"
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
 
 namespace MicroRenderer {
 
