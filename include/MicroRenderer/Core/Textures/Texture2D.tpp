@@ -156,7 +156,6 @@ namespace MicroRenderer {
         }
         else if constexpr (t_cfg.format == FORMAT_RGB565) {
             assert(verifyBufferPosition(position));
-            auto abc = *(reinterpret_cast<const uint16*>(position.address));
             pixel.r = static_cast<uint32>((*position.address & 0xF800) >> 11);
             pixel.g = static_cast<uint32>((*position.address & 0x07E0) >> 5);
             pixel.b = static_cast<uint32>(*position.address & 0x001F);
