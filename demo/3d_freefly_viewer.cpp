@@ -10,7 +10,7 @@
 
 using namespace MicroRenderer;
 
-#define SHADER_SIMPLECOUNTOURS 0
+#define SHADER_SIMPLECONTOURS 0
 #define SHADER_UNLITTEXTURED 1
 
 #define MODE_FREEFLY 0
@@ -28,21 +28,17 @@ using namespace MicroRenderer;
 using DataType = double;//fpm::fixed_16_16;
 constexpr int32 window_width = 1000;
 constexpr int32 window_height = 1000;
-// constexpr ShaderConfiguration my_shader_cfg = {
-// 	PERSPECTIVE, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED,
-// 	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_NORMALIZED}
-// };
 constexpr ShaderConfiguration my_shader_cfg = {
 	PERSPECTIVE, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED,
-	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_INTEGER}
+	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_NORMALIZED}
 };
 constexpr RendererConfiguration my_renderer_cfg = {SCANLINE, CLOCKWISE, my_shader_cfg};
 
 // ------------------ Renderer configuration --------------------- //
 
-// ------------------ Shaderr, Model and Texture includes --------------------- //
+// ------------------ Shader, Model and Texture includes --------------------- //
 
-#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+#if USED_SHADER == SHADER_SIMPLECONTOURS
 #include "SimpleContours/SimpleContoursShaderProgram.h"
 #include "models/SimpleContours/cube.h"
 #include "models/SimpleContours/tu_vienna_logo.h"
@@ -50,16 +46,16 @@ constexpr RendererConfiguration my_renderer_cfg = {SCANLINE, CLOCKWISE, my_shade
 #include "UnlitTextured/UnlitTexturedShaderProgram.h"
 #include "models/UnlitTextured/cube.h"
 #include "models/UnlitTextured/plane.h"
-#include "textures/color_grid_texture.h"
-#include "textures/tu_logo_texture.h"
+#include "textures/RGB444/color_grid_texture.h"
+#include "textures/RGB444/tu_logo_texture.h"
 #endif
 
-// ------------------ Model and Texture includes --------------------- //
+// ------------------ Shader, Model and Texture includes --------------------- //
 
 // ------------------ Renderer globals --------------------- //
 
 // Renderer object.
-#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+#if USED_SHADER == SHADER_SIMPLECONTOURS
 using MyRenderer = Renderer<DataType, my_renderer_cfg, SimpleContoursShaderProgram>;
 #elif USED_SHADER == SHADER_UNLITTEXTURED
 using MyRenderer = Renderer<DataType, my_renderer_cfg, UnlitTexturedShaderProgram>;
@@ -81,7 +77,7 @@ constexpr float aspect_ratio = static_cast<float>(window_height) / static_cast<f
 Matrix4<DataType> screen_proj_tf;
 
 // View state.
-#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+#if USED_SHADER == SHADER_SIMPLECONTOURS
 Vector3<DataType> view_position = {2.84572, -2.857554, -4.254630};
 Vector3<DataType> view_orientation = {-29.76, -37.5, 0.};
 #elif USED_SHADER == SHADER_UNLITTEXTURED
@@ -96,7 +92,7 @@ Vector3<DataType> view_fwd_dir, view_up_dir, view_right_dir;
 
 // ------------------ Shader globals --------------------- //
 
-#if USED_SHADER == USE_SIMPLECOUNTOURS_SHADER
+#if USED_SHADER == SHADER_SIMPLECONTOURS
 // Triangle normals.
 Vector3<DataType> cube_tri_normals[cube_triangle_number];
 Vector3<DataType> tu_vienna_logo_tri_normals[tu_vienna_logo_triangle_number];
@@ -110,9 +106,9 @@ MyRenderer::GlobalData global_data = {};
 // Instance data.
 constexpr uint16 num_instances = 3;
 MyRenderer::InstanceData instances[num_instances] = {
-	{2, {}, tu_vienna_logo_tri_normals, {}, {0.0, 0.0, 1.0}},
-	{0, {}, cube_tri_normals, {}, {1.0, 0.0, 0.0}},
-	{0, {}, cube_tri_normals, {}, {0.0, 1.0, 0.0}}
+	{2, {}, tu_vienna_logo_tri_normals, {}, {0.0, 0.0, 255.0}},
+	{0, {}, cube_tri_normals, {}, {255.0, 0.0, 0.0}},
+	{0, {}, cube_tri_normals, {}, {0.0, 255.0, 0.0}}
 };
 
 // Models.
@@ -122,7 +118,6 @@ constexpr MyRenderer::ModelData models[] = {
 	tu_vienna_logo_model<DataType, my_shader_cfg>
 };
 #elif USED_SHADER == SHADER_UNLITTEXTURED
-
 // // Lighting.
 // PointLight<DataType> world_point_lights[3] = {
 // 	{{2.3, -0.1, 0.8}, {3.0, 0.1, 0.1}},
@@ -159,7 +154,7 @@ DataType cubes_rot_speed = 15.0;
 
 void initializeRenderer()
 {
-#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+#if USED_SHADER == SHADER_SIMPLECONTOURS
 	// Preprocess triangle normals.
 	preprocessTriangleNormals<DataType, MyShaderProgram>(&cube_model<DataType, my_shader_cfg>, cube_tri_normals);
 	preprocessTriangleNormals<DataType, MyShaderProgram>(&tu_vienna_logo_model<DataType, my_shader_cfg>, tu_vienna_logo_tri_normals);
@@ -206,7 +201,7 @@ void updateRenderer(DataType delta_time)
 	objects_y_rot += 0.1;
 #endif
 
-#if USED_SHADER == SHADER_SIMPLECOUNTOURS
+#if USED_SHADER == SHADER_SIMPLECONTOURS
 	// TU Vienna Logo transform.
     Matrix4<DataType> tu_logo_model_tf = Transform::translation<DataType>(Vector3<DataType>(0., 0., 0.2));
     tu_logo_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., objects_y_rot, 0.));
@@ -243,12 +238,12 @@ void updateRenderer(DataType delta_time)
     // Plane 1 transform.
     DataType plane_scale_mod = static_cast<DataType>(tu_logo_texture_width) / static_cast<DataType>(tu_logo_texture_height);
     Matrix4<DataType> plane_1_model_tf = Transform::translation<DataType>(Vector3<DataType>(1., 0., 0.2));
-    plane_1_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., 180. + objects_y_rot, 0.));
+    plane_1_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., 180. + objects_y_rot, 180.));
     plane_1_model_tf *= Transform::scale<DataType>(Vector3<DataType>(plane_scale_mod * 0.5, 0.5, 0.5));
     instances[1].model_screen_tf = screen_proj_view_tf * plane_1_model_tf;
     // Plane 2 transform.
     Matrix4<DataType> plane_2_model_tf = Transform::translation<DataType>(Vector3<DataType>(1., 0., 0.2));
-    plane_2_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., objects_y_rot, 0.));
+    plane_2_model_tf *= Transform::rotationEuler<DataType>(Vector3<DataType>(0., objects_y_rot, 180.));
     plane_2_model_tf *= Transform::scale<DataType>(Vector3<DataType>(plane_scale_mod * 0.5, 0.5, 0.5));
     instances[2].model_screen_tf = screen_proj_view_tf * plane_2_model_tf;
 #endif
@@ -285,7 +280,7 @@ void drawRenderer()
 	}
 }
 
-// ------------------ Rendering helper functions --------------------- //
+// ------------------ Rendering functions --------------------- //
 
 // ------------------ SDL Demo --------------------- //
 

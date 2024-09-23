@@ -26,7 +26,7 @@ public:
     {
         // Return color from texture.
         auto color = uniform.instance->color_texture.readPixelAt(static_cast<Vector2<T>>(triangle->uv.getValue()));
-        //return {color.g, color.b, 1.f, color.r};
+        //return {color.g, color.b, 1, color.r};
         return color;
     }
 };
