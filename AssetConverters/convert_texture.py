@@ -66,7 +66,7 @@ header_template = '''/*
  */
 
 #pragma once
-#include "MicroRenderer/Core/Textures/TextureConfiguration.h"
+#include "MicroRenderer/Textures/TextureConfiguration.h"
 #include "MicroRenderer/Math/ScalarTypes.h"
 
 using namespace MicroRenderer;
