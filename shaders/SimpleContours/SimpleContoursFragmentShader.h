@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/FragmentShader.h"
+#include "MicroRenderer/Shading/FragmentShader.h"
 #include "SimpleContoursShaderInterface.h"
 
 namespace MicroRenderer {

@@ -4,7 +4,6 @@
 
 #pragma once
 #include "MicroRenderer/Math/ScalarTypes.h"
-#include "MicroRenderer/Math/Vector3.h"
 #include "TextureConfiguration.h"
 #include "TextureTypes.h"
 #include <string>

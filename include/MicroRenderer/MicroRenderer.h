@@ -8,17 +8,17 @@
 #include "MicroRenderer/Core/Renderer.h"
 
 // Core/Shading
-#include "MicroRenderer/Core/Shading/ShaderConfiguration.h"
-#include "MicroRenderer/Core/Shading/ShaderInterface.h"
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
-#include "MicroRenderer/Core/Shading/VertexShader.h"
-#include "MicroRenderer/Core/Shading/TriangleAssembler.h"
-#include "MicroRenderer/Core/Shading/FragmentShader.h"
+#include "MicroRenderer/Shading/ShaderConfiguration.h"
+#include "MicroRenderer/Shading/ShaderInterface.h"
+#include "MicroRenderer/Shading/ShaderProgram.h"
+#include "MicroRenderer/Shading/VertexShader.h"
+#include "MicroRenderer/Shading/TriangleAssembler.h"
+#include "MicroRenderer/Shading/FragmentShader.h"
 
 // Core/Textures
-#include "MicroRenderer/Core/Textures/Texture2D.h"
-#include "MicroRenderer/Core/Textures/TextureTypes.h"
-#include "MicroRenderer/Core/Textures/TextureConfiguration.h"
+#include "MicroRenderer/Textures/Texture2D.h"
+#include "MicroRenderer/Textures/TextureTypes.h"
+#include "MicroRenderer/Textures/TextureConfiguration.h"
 
 // Math
 #include "MicroRenderer/Math/Matrix4.h"

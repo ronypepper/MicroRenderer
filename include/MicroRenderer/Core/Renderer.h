@@ -4,11 +4,11 @@
 
 #pragma once
 #include <variant>
-#include "MicroRenderer/Core/Textures/Texture2D.h"
+#include "MicroRenderer/Textures/Texture2D.h"
 #include "MicroRenderer/Math/ScalarTypes.h"
 #include "MicroRenderer/Math/Vector2.h"
 #include "MicroRenderer/Math/Vector3.h"
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
+#include "MicroRenderer/Shading/ShaderProgram.h"
 
 namespace MicroRenderer {
 

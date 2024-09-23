@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
+#include "MicroRenderer/Shading/ShaderProgram.h"
 #include "UnlitTexturedFragmentShader.h"
 #include "UnlitTexturedTriangleAssembler.h"
 #include "UnlitTexturedVertexShader.h"

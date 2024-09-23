@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
+#include "MicroRenderer/Shading/ShaderProgram.h"
 #include "GouraudTexturedFragmentShader.h"
 #include "GouraudTexturedTriangleAssembler.h"
 #include "GouraudTexturedVertexShader.h"

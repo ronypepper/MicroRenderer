@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderConfiguration.h"
-#include "MicroRenderer/Core/Shading/ShaderInterface.h"
+#include "MicroRenderer/Shading/ShaderConfiguration.h"
+#include "MicroRenderer/Shading/ShaderInterface.h"
 #include "MicroRenderer/Math/Interpolation.h"
 #include "MicroRenderer/Math/Vector3.h"
 

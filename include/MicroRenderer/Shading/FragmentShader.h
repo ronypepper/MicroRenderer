@@ -3,8 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderInterface.h"
-#include "MicroRenderer/Math/Vector3.h"
+#include "MicroRenderer/Shading/ShaderInterface.h"
 
 namespace MicroRenderer {
 

@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderInterface.h"
+#include "MicroRenderer/Shading/ShaderInterface.h"
 
 template<typename T>
 struct BarycentricIncrements;

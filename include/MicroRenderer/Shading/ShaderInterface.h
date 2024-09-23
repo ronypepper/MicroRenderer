@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderConfiguration.h"
+#include "MicroRenderer/Shading/ShaderConfiguration.h"
 #include "MicroRenderer/Math/Vector3.h"
 #include "MicroRenderer/Math/Vector4.h"
-#include "MicroRenderer/Core/Textures/Texture2D.h"
+#include "MicroRenderer/Textures/Texture2D.h"
 #include "MicroRenderer/Math/Interpolation.h"
 
 namespace MicroRenderer {

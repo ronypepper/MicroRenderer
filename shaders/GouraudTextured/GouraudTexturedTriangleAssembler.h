@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/TriangleAssembler.h"
+#include "MicroRenderer/Shading/TriangleAssembler.h"
 #include "GouraudTexturedShaderInterface.h"
 
 namespace MicroRenderer {

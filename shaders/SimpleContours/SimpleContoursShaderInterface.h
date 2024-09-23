@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/ShaderInterface.h"
+#include "MicroRenderer/Shading/ShaderInterface.h"
 #include "MicroRenderer/Math/Matrix4.h"
 #include "MicroRenderer/Math/Vector3.h"
 

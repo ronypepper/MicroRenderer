@@ -8,7 +8,7 @@
 #include <cmath>
 #include <functional>
 #include "MicroRenderer/Math/Vector2.h"
-#include "MicroRenderer/Core/Shading/ShaderProgram.h"
+#include "MicroRenderer/Shading/ShaderProgram.h"
 
 namespace MicroRenderer {
 

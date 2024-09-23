@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "MicroRenderer/Core/Shading/VertexShader.h"
+#include "MicroRenderer/Shading/VertexShader.h"
 #include "GouraudTexturedShaderInterface.h"
 
 namespace MicroRenderer {
