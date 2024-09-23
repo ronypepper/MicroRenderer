@@ -1,3 +1,4 @@
+import math
 import sys
 import os
 import configparser
@@ -75,7 +76,7 @@ constexpr TextureInternalFormat %TEXTURE_NAME%_format = %FORMAT%;
 constexpr int32 %TEXTURE_NAME%_width = %WIDTH%;
 constexpr int32 %TEXTURE_NAME%_height = %HEIGHT%;
 
-%ACCESS_MODIFIER% uint8 %TEXTURE_NAME%[%NUM_PIXEL_DATA_BYTES%] = {
+%ACCESS_MODIFIER% %PIXEL_DATA_TYPE% %TEXTURE_NAME%[%NUM_PIXEL_DATA_ELEMS%] = {
     %PIXEL_DATA%
 };
 '''
@@ -91,14 +92,34 @@ else:
 # Verify format and insert format information into header template.
 if dimension == 3 and bit_depths[0] == 8 and bit_depths[1] == 8 and bit_depths[2] == 8:
     header_template = header_template.replace('%FORMAT%', 'FORMAT_RGB888')
+    header_template = header_template.replace('%PIXEL_DATA_TYPE%', 'Vector3<uint8>')
+    word_bit_length = 8
+    num_words_per_elem = 3
+    num_pixels_per_elem = 1
 elif dimension == 3 and bit_depths[0] == 5 and bit_depths[1] == 6 and bit_depths[2] == 5:
     header_template = header_template.replace('%FORMAT%', 'FORMAT_RGB565')
+    header_template = header_template.replace('%PIXEL_DATA_TYPE%', 'uint16')
+    word_bit_length = 16
+    num_words_per_elem = 1
+    num_pixels_per_elem = 1
 elif dimension == 3 and bit_depths[0] == 4 and bit_depths[1] == 4 and bit_depths[2] == 4:
     header_template = header_template.replace('%FORMAT%', 'FORMAT_RGB444')
+    header_template = header_template.replace('%PIXEL_DATA_TYPE%', 'Vector3<uint8>')
+    word_bit_length = 8
+    num_words_per_elem = 3
+    num_pixels_per_elem = 2
 elif dimension == 4 and bit_depths[0] == 4 and bit_depths[1] == 4 and bit_depths[2] == 4 and bit_depths[3] == 4:
     header_template = header_template.replace('%FORMAT%', 'FORMAT_RGBA4444')
+    header_template = header_template.replace('%PIXEL_DATA_TYPE%', 'uint16')
+    word_bit_length = 16
+    num_words_per_elem = 1
+    num_pixels_per_elem = 1
 elif dimension == 1 and bit_depths[0] == 8:
     header_template = header_template.replace('%FORMAT%', 'FORMAT_R8')
+    header_template = header_template.replace('%PIXEL_DATA_TYPE%', 'uint8')
+    word_bit_length = 8
+    num_words_per_elem = 1
+    num_pixels_per_elem = 1
 else:
     sys.exit('Invalid Configuration: Dimension/BitDepth(s) combination not supported!')
 
@@ -113,10 +134,11 @@ def convert_texture(texture_file_name):
     try:
         img = Image.open(texture_in_path)
 
-        # Verify image width/height.
+        # Verify image elements.
         img_width, img_height = img.size
-        if img_width < 1 or img_height < 1:
-            print('Error: Image has zero pixels: "{}"!'.format(texture_in_path))
+        num_elems = math.ceil(img_width * img_height / num_pixels_per_elem)
+        if num_elems <= 0:
+            print('Error: Image has zero elements: "{}"!'.format(texture_in_path))
             return
 
         # Verify image dimension compatibility.
@@ -127,58 +149,84 @@ def convert_texture(texture_file_name):
             print('Error: Input image must have RGBA mode for Dimension = 4: "{}"!'.format(texture_in_path))
             return
 
-        # Prepare pixel data for texture header.
-        pixel_data = ''
-        uint8_buffer = 0
-        next_bit_in_buffer_mask = 1 << 7
-        num_written_uint8s = 0
+        # Gather pixel values.
+        pixel_values = []
         for y in range(img_height):
             for x in range(img_width):
                 # Get pixel.
                 pixel = img.getpixel((x, y))
+                new_value = []
                 for idx, depth in enumerate(bit_depths):
-                    # Get value of pixel channel adjusted to its desired bit depth.
-                    value = (pixel[idx] & 0xff) >> (8 - depth)
+                    # Add value of pixel channel adjusted to its desired bit depth.
+                    new_value.append((pixel[idx] & 0xff) >> (8 - depth))
+                pixel_values.append(new_value)
 
-                    # Iterate over bits in value, writing them to 8-bit sized output buffer.
-                    # When buffer is full, insert string into pixel_data for header and reset buffer.
-                    remaining_bits_in_value = depth
-                    while remaining_bits_in_value > 0:
-                        # Get next bit.
-                        remaining_bits_in_value -= 1
-                        next_bit_in_value_mask = 1 << remaining_bits_in_value
-                        next_bit = value & next_bit_in_value_mask
+        # Extend pixel values to fill necessary elements.
+        if len(pixel_values) > num_elems * num_pixels_per_elem:
+            print('Internal Error: More pixels than expected for "{}"!'.format(texture_in_path))
+            return
+        while len(pixel_values) < num_elems * num_pixels_per_elem:
+            pixel_values.append([0] * len(bit_depths))
 
-                        # Write bit into buffer.
-                        if next_bit != 0:
-                            uint8_buffer |= next_bit_in_buffer_mask
-                        next_bit_in_buffer_mask = next_bit_in_buffer_mask >> 1
+        # Write pixel values to string.
+        pixel_string = '' if num_words_per_elem == 1 else '{'
+        num_written_elems = 0
+        num_written_words = 0
+        num_elems_per_line = max(1, 20 // num_words_per_elem)
+        word_buffer = 0
+        next_bit_in_word_mask = 1 << (word_bit_length - 1)
+        for pixel_value in pixel_values:
+            for value, depth in zip(pixel_value, bit_depths):
+                # Iterate over bits in value, writing them into the word_bit_length sized word_buffer.
+                # When buffer is full, insert string into pixel_string for header and reset word_buffer.
+                remaining_bits_in_value = depth
+                while remaining_bits_in_value > 0:
+                    # Get next bit.
+                    remaining_bits_in_value -= 1
+                    next_bit_in_value_mask = 1 << remaining_bits_in_value
+                    next_bit = value & next_bit_in_value_mask
 
-                        # Append to string for header and reset buffer when full.
-                        if next_bit_in_buffer_mask == 0:
-                            pixel_data += str(uint8_buffer) + ', '
-                            num_written_uint8s += 1
-                            if num_written_uint8s % 20 == 0:
-                                pixel_data += '\n\t'
-                            uint8_buffer = 0
-                            next_bit_in_buffer_mask = 1 << 7
-        # Write partially filled last buffer to string for header.
-        if next_bit_in_buffer_mask < 1 << 7:
-            pixel_data += str(uint8_buffer)
-            num_written_uint8s += 1
-        else:
-            if num_written_uint8s % 20 == 0:
-                pixel_data = pixel_data[:-4]
-            else:
-                pixel_data = pixel_data[:-2]
+                    # Write bit into buffer.
+                    if next_bit != 0:
+                        word_buffer |= next_bit_in_word_mask
+                    next_bit_in_word_mask = next_bit_in_word_mask >> 1
+
+                    # Append to string for header and reset word_buffer when full.
+                    if next_bit_in_word_mask == 0:
+                        pixel_string += str(word_buffer)
+                        word_buffer = 0
+                        next_bit_in_word_mask = 1 << (word_bit_length - 1)
+                        num_written_words += 1
+                        if num_words_per_elem == 1:
+                            num_written_elems += 1
+                            if num_written_elems < num_elems:
+                                pixel_string += ', '
+                                if num_written_elems % num_elems_per_line == 0:
+                                    pixel_string += '\n\t'
+                        else:
+                            if num_written_words % num_words_per_elem == 0:
+                                num_written_elems += 1
+                                if num_written_elems == num_elems:
+                                    pixel_string += '}'
+                                elif num_written_elems % num_elems_per_line == 0:
+                                    pixel_string += '},\n\t{'
+                                else:
+                                    pixel_string += '}, {'
+                            else:
+                                pixel_string += ', '
+
+        # Check number of written words.
+        if num_written_words != num_elems * num_words_per_elem:
+            print('Internal Error: More or less words written than expected for: "{}"!'.format(texture_in_path))
+            return
 
         # Insert information into texture header.
         texture_name = str(pathlib.Path(texture_file_name).with_suffix(''))
         converted_texture = header_template.replace('%TEXTURE_NAME%', texture_name)
         converted_texture = converted_texture.replace('%WIDTH%', str(img_width))
         converted_texture = converted_texture.replace('%HEIGHT%', str(img_height))
-        converted_texture = converted_texture.replace('%NUM_PIXEL_DATA_BYTES%', str(num_written_uint8s))
-        converted_texture = converted_texture.replace('%PIXEL_DATA%', pixel_data)
+        converted_texture = converted_texture.replace('%NUM_PIXEL_DATA_ELEMS%', str(num_elems))
+        converted_texture = converted_texture.replace('%PIXEL_DATA%', pixel_string)
 
         # Write header file in output directory.
         texture_out_path = os.path.join(output_dir, texture_name + '.h')

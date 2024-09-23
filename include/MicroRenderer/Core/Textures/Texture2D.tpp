@@ -74,7 +74,7 @@ namespace MicroRenderer {
         }
         else if constexpr (t_cfg.format == FORMAT_RGB444) {
             position.address = buffer + (pixel_num >> 1);
-            position.alignment = pixel_num << 31;
+            position.alignment = pixel_num & 0x1;
         }
         return position;
     }
@@ -156,9 +156,10 @@ namespace MicroRenderer {
         }
         else if constexpr (t_cfg.format == FORMAT_RGB565) {
             assert(verifyBufferPosition(position));
+            auto abc = *(reinterpret_cast<const uint16*>(position.address));
             pixel.r = static_cast<uint32>((*position.address & 0xF800) >> 11);
             pixel.g = static_cast<uint32>((*position.address & 0x07E0) >> 5);
-            pixel.b = static_cast<uint32>((*position.address & 0x001F) << 0);
+            pixel.b = static_cast<uint32>(*position.address & 0x001F);
         }
         else if constexpr (t_cfg.format == FORMAT_RGB444) {
             assert(verifyBufferPosition(position));
@@ -175,10 +176,10 @@ namespace MicroRenderer {
         }
         else if constexpr (t_cfg.format == FORMAT_RGBA4444) {
             assert(verifyBufferPosition(position));
-            pixel.r = static_cast<uint32>((*position.address & 0xF000) >> 8);
-            pixel.g = static_cast<uint32>((*position.address & 0x0F00) >> 4);
-            pixel.b = static_cast<uint32>((*position.address & 0x00F0) << 0);
-            pixel.a = static_cast<uint32>((*position.address & 0x000F) << 4);
+            pixel.r = static_cast<uint32>((*position.address & 0xF000) >> 12);
+            pixel.g = static_cast<uint32>((*position.address & 0x0F00) >> 8);
+            pixel.b = static_cast<uint32>((*position.address & 0x00F0) >> 4);
+            pixel.a = static_cast<uint32>(*position.address & 0x000F);
         }
         else if constexpr (t_cfg.format == FORMAT_R32 || t_cfg.format == FORMAT_R16 || t_cfg.format == FORMAT_R8) {
             pixel = static_cast<uint32>(*position.address);
@@ -427,10 +428,10 @@ namespace MicroRenderer {
                 return false;
         }
         else if constexpr (t_cfg.format == FORMAT_RGB444) {
-            if (position.address >= buffer + (num_pixels >> 1))
+            if (position.address > buffer + (num_pixels >> 1))
                 return false;
             if (texture_width % 2) {
-                if (position.address == buffer + (num_pixels >> 1) - 1 && position.alignment == RGB444_ALIGNMENT_ODD)
+                if (position.address == buffer + (num_pixels >> 1) && position.alignment == RGB444_ALIGNMENT_ODD)
                     return false;
             }
         }

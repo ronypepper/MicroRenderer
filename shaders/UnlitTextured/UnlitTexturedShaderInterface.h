@@ -21,7 +21,7 @@ template<typename T>
 struct UnlitTexturedInstanceData : BaseInstanceData
 {
     Matrix4<T> model_screen_tf;
-    Texture2D<T, {ACCESS_READONLY, FORMAT_RGB888, SWIZZLE_NONE, TYPE_INTEGER, WRAPMODE_TILING}> color_texture;
+    Texture2D<T, {ACCESS_READONLY, FORMAT_RGB444, SWIZZLE_NONE, TYPE_NORMALIZED, WRAPMODE_NONE}> color_texture;
 };
 
 template<typename T>
