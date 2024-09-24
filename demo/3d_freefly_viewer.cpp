@@ -2,8 +2,21 @@
 // Created by pusdo on 13/08/2024.
 //
 
+/*
+ * This demo requires SDL2 to be installed, available under the zlib license.
+ *
+ * The demo can be switched to two modes under --- Demo Configuration --- below:
+ * 1. MODE_FREEFLY: Allows freefly navigation by 'WASDQE' for movement and the arrow keys for rotation.
+ *					The image can be saved as .ppm files by pressing the 'P' key.
+ *					Color/Depth information display can be toggled by pressing the 'Space' key.
+ * 2. MODE_CAPTURE_STATS: Captures a number of frames and then prints performance metrics to console.
+ *
+ * Two shaders can be selected under --- Demo Configuration --- below:
+ * 1. SHADER_SIMPLECONTOURS: see shaders directory.
+ * 2. SHADER_UNLITTEXTURED: see shaders directory.
+ */
+
 #include "SDL.h"
-//#include "fpm/fixed.hpp"
 #include <chrono>
 
 #include "MicroRenderer/MicroRenderer.h"
@@ -25,12 +38,12 @@ using namespace MicroRenderer;
 
 // ------------------ Renderer configuration --------------------- //
 
-using DataType = double;//fpm::fixed_16_16;
+using DataType = double;
 constexpr int32 window_width = 1000;
 constexpr int32 window_height = 1000;
 constexpr ShaderConfiguration my_shader_cfg = {
 	PERSPECTIVE, CULL_AT_SCREEN_BORDER, CLIP_AT_NEAR_PLANE, DEPTH_TEST_ENABLED, SHADING_ENABLED,
-	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_NORMALIZED}
+	{FORMAT_RGB888, SWIZZLE_NONE, TYPE_INTEGER}
 };
 constexpr RendererConfiguration my_renderer_cfg = {SCANLINE, CLOCKWISE, my_shader_cfg};
 
@@ -46,8 +59,8 @@ constexpr RendererConfiguration my_renderer_cfg = {SCANLINE, CLOCKWISE, my_shade
 #include "UnlitTextured/UnlitTexturedShaderProgram.h"
 #include "models/UnlitTextured/cube.h"
 #include "models/UnlitTextured/plane.h"
-#include "textures/RGB444/color_grid_texture.h"
-#include "textures/RGB444/tu_logo_texture.h"
+#include "textures/RGB888/color_grid_texture.h"
+#include "textures/RGB888/tu_logo_texture.h"
 #endif
 
 // ------------------ Shader, Model and Texture includes --------------------- //
