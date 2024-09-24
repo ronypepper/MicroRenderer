@@ -99,13 +99,14 @@ void Renderer<T, t_cfg, ShaderProgram>::setVertexBuffers(VertexBuffer* buffers)
 }
 
 template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::setRasterizationBuffers(RasterizationBuffer* buffers, RasterizationOrder* order) requires(t_cfg.render_mode == SCANLINE)
+void Renderer<T, t_cfg, ShaderProgram>::setRasterizationBuffers(RasterizationBuffer* buffers, RasterizationOrder* order, uint16 size_in_elements) requires(t_cfg.render_mode == SCANLINE)
 {
     scanline_render_data.buffers = buffers;
     scanline_render_data.order = order;
+    scanline_render_data.max_num_buffers = size_in_elements;
 }
 
-template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
+/*template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T>& color)
 {
     x0 = std::clamp(x0, static_cast<T>(-0.5), right_x_clip);
@@ -196,20 +197,7 @@ void Renderer<T, t_cfg, ShaderProgram>::rasterizeLineDDAUnsafe(T x0, T y0, T x1,
             }
         }
     }
-}
-
-template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
-void Renderer<T, t_cfg, ShaderProgram>::rasterizeTriangle(const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c)
-{
-    // RasterizationBuffer rasterization;
-    // int16 y_start = -1;
-    // if (setupTriangleRasterization({a, 0}, {b, 0}, {c, 0}, rasterization, y_start)) {
-    //     TriangleSource tri_source = {{1.f}};
-    //     TriangleData triangle = {&tri_source, nullptr};
-    //     VertexBuffer vertex_buffer =
-    //     shadeFullTriangle(rasterization, triangle, y_start);
-    // }
-}
+}*/
 
 template<typename T, RendererConfiguration t_cfg, template <typename, ShaderConfiguration> class ShaderProgram>
 void Renderer<T, t_cfg, ShaderProgram>::render()
@@ -771,7 +759,10 @@ void Renderer<T, t_cfg, ShaderProgram>::processTriangle(uint32 tri_idx, VertexDa
         }
     }
     else if constexpr (t_cfg.render_mode == SCANLINE) {
-        // Get reference to next entry in stored rasterization buffers.
+        // Get reference to next entry in stored rasterization buffers if not full.
+        if (scanline_render_data.num_buffers >= scanline_render_data.max_num_buffers) {
+            return;
+        }
         uint16 buffer_idx = scanline_render_data.num_buffers;
         RasterizationBuffer& rasterization = scanline_render_data.buffers[buffer_idx];
 

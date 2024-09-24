@@ -77,9 +77,15 @@ using MyShaderProgram = MyRenderer::ShaderProgram_type;
 MyRenderer my_renderer;
 
 // Buffers.
-MyRenderer::VertexBuffer vertex_buffer[1000];
-MyRenderer::RasterizationBuffer rasterization_buffers[400];
-MyRenderer::RasterizationOrder rasterization_order[400];
+#if USED_SHADER == SHADER_SIMPLECONTOURS
+constexpr uint16 num_vertex_buffers = std::max(cube_vertex_number, tu_vienna_logo_vertex_number);
+#elif USED_SHADER == SHADER_UNLITTEXTURED
+constexpr uint16 num_vertex_buffers = std::max(cube_vertex_number, plane_vertex_number);
+#endif
+MyRenderer::VertexBuffer vertex_buffer[num_vertex_buffers];
+constexpr uint16 num_rasterization_structs = 400;
+MyRenderer::RasterizationBuffer rasterization_buffers[num_rasterization_structs];
+MyRenderer::RasterizationOrder rasterization_order[num_rasterization_structs];
 
 // Frame/depthbuffer.
 void* framebuffer_address = nullptr;
@@ -192,7 +198,7 @@ void initializeRenderer()
 	my_renderer.setInstances(instances, num_instances);
 	my_renderer.setGlobalData(&global_data);
 	my_renderer.setVertexBuffers(vertex_buffer);
-	my_renderer.setRasterizationBuffers(rasterization_buffers, rasterization_order);
+	my_renderer.setRasterizationBuffers(rasterization_buffers, rasterization_order, num_rasterization_structs);
 }
 
 void updateRenderer(DataType delta_time)

@@ -102,6 +102,8 @@ public:
 
         RasterizationOrder* order = nullptr;
 
+        uint16 max_num_buffers = 0;
+
         uint16 num_buffers = 0;
 
         uint16 actives_order_start = 0;
@@ -140,14 +142,11 @@ public:
 
     void setVertexBuffers(VertexBuffer* buffers);
 
-    void setRasterizationBuffers(RasterizationBuffer* buffers, RasterizationOrder* order) requires(t_cfg.render_mode == SCANLINE);
+    void setRasterizationBuffers(RasterizationBuffer* buffers, RasterizationOrder* order, uint16 size_in_elements) requires(t_cfg.render_mode == SCANLINE);
 
-    void rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
+    //void rasterizeLineDDASafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
+    //void rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
 
-    void rasterizeLineDDAUnsafe(T x0, T y0, T x1, T y1, const Vector3<T> &color);
-
-    void rasterizeTriangle(const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c);
-    
     void render();
 
     void renderNextScanline() requires(t_cfg.render_mode == SCANLINE);
