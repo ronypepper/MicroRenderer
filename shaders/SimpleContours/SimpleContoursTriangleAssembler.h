@@ -19,7 +19,7 @@ public:
                                                    VertexSource* new_src, VertexBuffer* new_buf, T from_factor,
                                                    T to_factor)
     {
-        new_src->position = interpolateLinearly(from.source->position, to.source->position, from_factor, to_factor);
+        new_src->position = interpolateLinearly(from.source->position, to.source->position, from_factor, to_factor); // TODO: probably not needed (used)
     }
 
     static void setupTriangle_implementation(UniformData uniform, uint32 tri_idx, VertexData v1, VertexData v2,

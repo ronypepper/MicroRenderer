@@ -13,7 +13,7 @@ public:
     template<typename T>
     static Matrix4<T> translation(const Vector3<T>& position);
 
-    // Rotation around x, than y, than z: R(x,y,z) = R_z(z) * R_y(y) * R_x(x)
+    // Rotation around x, then y, then z: R(x,y,z) = R_z(z) * R_y(y) * R_x(x)
     template<typename T>
     static Matrix4<T> rotationRadians(const Vector3<T>& rotation);
 

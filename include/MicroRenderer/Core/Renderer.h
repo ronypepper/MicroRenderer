@@ -93,7 +93,7 @@ public:
 
         friend bool operator<(const RasterizationOrder& lhs, const RasterizationOrder& rhs)
         {
-            return lhs.scanline < rhs.scanline;
+            return lhs.scanline < rhs.scanline; // TODO: possible speedup by reinterpreting lhs and rhs as int32?
         }
     };
     struct ScanlineRenderData

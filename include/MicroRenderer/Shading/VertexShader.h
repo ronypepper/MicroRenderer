@@ -9,7 +9,7 @@ namespace MicroRenderer {
 
 template<typename T, ShaderConfiguration t_cfg, template <typename, ShaderConfiguration> class Interface,
          template <typename, ShaderConfiguration> class Derived>
-class BaseVertexShader
+class BaseVertexShader // TODO: hide constructor (if correct) - also for TriangleAssembler and FragmentShader
 {
 public:
     using ShaderInterface_type = Interface<T, t_cfg>;

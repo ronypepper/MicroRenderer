@@ -10,7 +10,7 @@ namespace MicroRenderer {
 // Linear interpolation.
 
 template<typename T, typename Attribute>
-    Attribute interpolateLinearly(const Attribute& from, const Attribute& to, T from_factor, T to_factor)
+Attribute interpolateLinearly(const Attribute& from, const Attribute& to, T from_factor, T to_factor)
 {
     return from * from_factor + to * to_factor;
 }
@@ -63,7 +63,7 @@ public:
     }
 
     template<IncrementationMode mode>
-    void increment(int32 offset = 1)
+    void increment(int32 offset = 1) // TODO: why is offset not directly of type T?
     {
         if constexpr(mode == IncrementationMode::OneInX) {
             current_value += increment_x;

@@ -9,7 +9,7 @@ parameters to the main renderer class.
 
 This library was developed as part of my bachelor's thesis at the Technical University of Vienna.
 Details about the rendering pipeline implemented, reasoning behind it and some rendering background can be found in my 
-thesis at: TODO.
+thesis: [Platform Independent Rendering Algorithm for Microcontrollers.pdf](thesis%2FPlatform%20Independent%20Rendering%20Algorithm%20for%20Microcontrollers.pdf)
 
 For usage guidelines refer to the thesis, especially Section 3.7 **Library Usage** and Appendix A.
 The 3d_freefly_viewer.cpp file in the demo directory may also be helpful, which can be run using SDL2 on PC.

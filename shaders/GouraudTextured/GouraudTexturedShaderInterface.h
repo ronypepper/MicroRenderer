@@ -29,8 +29,8 @@ template<typename T>
 struct GouraudTexturedInstanceData : BaseInstanceData
 {
     Matrix4<T> model_screen_tf;
-    Texture2D<T, {ACCESS_READONLY, FORMAT_RGB888, SWIZZLE_NONE, TYPE_INTEGER, WRAPMODE_TILING}> color_texture;
-    PointLight<T> point_lights[3];
+    Texture2D<T, {ACCESS_READONLY, FORMAT_RGB888, SWIZZLE_NONE, TYPE_INTEGER, WRAPMODE_TILING}> color_texture; // TODO: probably should be WRAPMODE_NONE
+    PointLight<T> point_lights[3]; // TODO: should be global data.
 };
 
 template<typename T>

@@ -31,7 +31,7 @@ using namespace MicroRenderer;
 
 // ------------------ Demo configuration --------------------- //
 
-#define DEMO_MODE MODE_CAPTURE_STATS
+#define DEMO_MODE MODE_FREEFLY
 #define USED_SHADER SHADER_UNLITTEXTURED
 
 // ------------------ Demo configuration --------------------- //

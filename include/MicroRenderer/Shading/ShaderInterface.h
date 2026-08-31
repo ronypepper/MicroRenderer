@@ -97,7 +97,7 @@ public:
         const VertexSource_type* source;
         VertexBuffer_type* buffer;
     };
-    struct ModelData
+    struct ModelData // TODO: ModelData defintion here requires passing the ShaderConfiguration to any ModelData instance, which is unnecessary and potentially requires duplicating ModelData instances for the same shader used in different ShaderConfiguration-configured renderers. Could be solved by moving this struct outside the ShaderInterface and templating it with VertexSource only.
     {
         uint16 num_vertices;
         uint16 num_triangles;

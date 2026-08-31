@@ -25,7 +25,7 @@ public:
     static ShaderOutput computeColor_implementation(UniformData uniform, TriangleBuffer* triangle)
     {
         // Return color from texture.
-        auto color = uniform.instance->color_texture.readPixelAt(static_cast<Vector2<T>>(triangle->uv.getValue()));
+        auto color = uniform.instance->color_texture.readPixelAt(static_cast<Vector2<T>>(triangle->uv.getValue())); // TODO: why static_cast? Probably because of compiler warnings (or unnecessary) // TODO: speeup by direct uv integer access
         //return {color.g, color.b, 15, color.r};
         return color;
     }

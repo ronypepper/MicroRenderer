@@ -244,7 +244,7 @@ template <typename T, RendererConfiguration t_cfg, template <typename, ShaderCon
 void Renderer<T, t_cfg, ShaderProgram>::renderNextScanline() requires (t_cfg.render_mode == SCANLINE)
 {
     ScanlineRenderData& data = scanline_render_data;
-    int32 scanline = scanline_render_data.next_scanline;
+    int32 scanline = scanline_render_data.next_scanline; // TODO: assert next_scanline overflow
 
     // Add newly visible triangles to active section.
     while (data.actives_order_stop < data.num_buffers) {
